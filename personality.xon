@@ -1,0 +1,23 @@
+; personality.xon -- what this bundle IS.
+
+(personality "r7rs")
+
+; XENON, for the same reason x-r5rs is: Scheme's numerics are the tower.
+; It is not radon because the two modules that wanted dlopen -- x/bytevector.x
+; and scm/ports.scm -- are not loaded in this release.  Restoring either moves
+; this row, which is what it is for.
+(dialect xe)
+
+(requires-release "0.5.2")
+
+(entry "run.x")
+
+; THE ROW THAT SHOULD BE HERE AND IS NOT:
+;
+;   (requires-personality "x-r5rs" "0.1.0")
+;
+; R7RS extends R5RS and this bundle does not work without it, but the manifest
+; has no vocabulary for a bundle-to-bundle dependency -- so run.x and
+; tests/gen-harness.sh each probe for the sibling instead, and a missing
+; x-r5rs is a runtime refusal rather than an acquisition-time one.
+; See x-lang#526.
