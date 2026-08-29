@@ -10,7 +10,8 @@
 ;   (lang "NAME")               the -l name
 ;   (dialect NAME)              he | xe | rn -- a REQUIREMENT, not a taste
 ;   (requires-release "TAG")    the x-lang this bundle was built against
-;   (requires-lang "NAME")      another lang this one is written on top of
+;   (requires-lang "NAME" ["V"]) another lang this one is written on top
+;                               of, optionally at an exact version
 ;   (entry "FILE")              loaded AFTER the dialect, not instead of it
 
 (lang "r7rs")
@@ -42,9 +43,20 @@
 ; needed, and would have been re-derived by every dependent.  The same argument
 ; (dialect ...) already makes -- a requirement belongs in the manifest.
 ;
-; No version here, deliberately: lang.xon has no row for a bundle's OWN
-; version, so there is nothing for a constraint to compare against.  Which
-; release you get is lang.pin.xon's question, and it answers it with a digest.
+; A VERSION MAY FOLLOW THE NAME, and none does yet.  The row accepts
+; (requires-lang "r5rs" "v0.2.0"), compared for EQUALITY against the version
+; the resolved lang reports -- never parsed, exactly as (requires-release ...)
+; above is.  Ordering and ranges would need a version algebra, and with it a
+; resolver; equality plus --allow-lang-skew is smaller and says what it means.
+;
+; What it compares against is DERIVED, not declared: `make install` and
+; tools/bundle.sh both stamp a `version` file from git describe / the tag,
+; because a version row in the dependency's own lang.xon could only be true
+; at the one commit that gets tagged and would lie at every other.
+;
+; Left off until x-r5rs is actually tagged.  git describe on an untagged repo
+; answers a bare hash, so any version named here would be one no install could
+; match -- a constraint that fails for everyone is worse than no constraint.
 (requires-lang "r5rs")
 
 (entry "run.x")
