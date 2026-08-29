@@ -24,18 +24,19 @@
 ;
 ; AND IT IS STILL NOT ENOUGH, WHICH IS WHY r7rs/base.x DOES NOT LOAD THIS FILE.
 ; Shadowing `guard` at all -- however faithfully it dispatches -- interposes one
-; operative frame between the runner's %seq and the body it guards, and
-; `define` cannot survive that.  r5rs/aliases.x binds by letting TCO pop the
-; operative's frame so the def lands globally; x offers no way to define in a
-; caller's environment across a frame boundary (x-lang#527, measured).  So
-; every define inside a guarded body binds nowhere, silently, and the runner's
-; own handler swallows the unbound-symbol error it caused: ~100 spec failures
-; with empty output, to buy the 17 in 12-exceptions.spec.md.
+; operative frame between the caller and the body it guards, and `define`'s
+; function-sugar branch does not survive it: (define (f p) p) binds nothing, so
+; f is unbound afterwards.
 ;
-; The module is kept because it is correct and because the day x-lang#527 lands
-; it becomes loadable as it stands.  Dropping `let` from the first version of
-; this file was necessary but not sufficient -- worth knowing, because the let
-; removal LOOKED like the fix and the numbers barely moved.
+; Routing define through eval! (which is frame-independent for the value it
+; binds) was NOT sufficient -- measured, with the file loaded the suite is 97
+; failures against 85 without it.  An earlier draft of this note claimed a
+; proposed (base def-global) primitive fixed it; that primitive was withdrawn
+; and the claim was wrong.  What actually breaks under the extra frame has not
+; been isolated.
+;
+; The module is kept because the dispatcher below is correct and worth having
+; when the binding question is settled.
 
 (define %c-guard guard)
 

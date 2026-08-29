@@ -48,7 +48,7 @@
 ; r5rs/aliases.x's define now goes through (base def-global), which takes the
 ; global path whatever the frame depth, so the frame this file adds costs
 ; nothing.
-(include-once "./x/guard.x")
+; ./x/guard.x is NOT loaded -- see the note in that file
 ; ./x/bytevector.x is NOT loaded -- see the note at the top of that file.
 
 ; --- Scheme standard library -------------------------------------------------
