@@ -22,7 +22,7 @@
 ; the escape hatch is that anything with a non-pair among the handler forms
 ; passes straight through untouched.
 ;
-; AND IT IS STILL NOT ENOUGH, WHICH IS WHY r7rs/base.x DOES NOT LOAD THIS FILE.
+; AND IT IS ONLY SAFE ON AN ENGINE THAT CAN BIND UNDER A FRAME.
 ; Shadowing `guard` at all -- however faithfully it dispatches -- interposes one
 ; operative frame between the caller and the body it guards, and `define`'s
 ; function-sugar branch does not survive it: (define (f p) p) binds nothing, so
@@ -78,6 +78,19 @@
           #f)
         #f))))
 
+; INSTALLED CONDITIONALLY.  Shadowing `guard` interposes an operative frame
+; between the caller and the guarded body, and `define` does not survive that
+; unless the engine carries (base def-global) -- measured with a bare
+; passthrough shadow, (define v 42), (define (f p) p) and
+; (define f (lambda (p) p)) ALL bind nothing.
+;
+; So the shadow goes up only when the binding question is answered.  On an
+; engine without the primitive this file loads and defines nothing, which costs
+; the 16 exception specs and keeps the other 39 that shadowing would break.
+; 637-spec suite: 42 failures with the shadow on a capable engine, 97 with it
+; on one without.  See x-lang#527.
+(if (null? (prim-ref (lit base) (lit def-global)))
+  ()
 (define
   guard
   (op (clause . body)
@@ -91,4 +104,4 @@
             ; x: the handler forms are already the handler.
             clause)
           body))
-      env)))
+      env))))
