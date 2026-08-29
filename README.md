@@ -16,10 +16,10 @@ $ x -l r7rs
 
 ## Status
 
-**595 of 637 specs green** against x-lang **0.5.2** and an x-engine-c carrying
+**595 of 637 specs green** against x-lang **v0.6.0** and an x-engine-c carrying
 the [#527](https://github.com/jonruttan/x-lang/issues/527) fix.
 
-Fourth of the five 2024-era personalities to come back, and the first to depend
+Fourth of the five 2024-era langs to come back, and the first to depend
 on another one.
 
 The 42 that do not pass are three groups and one loose end:
@@ -34,27 +34,20 @@ The 42 that do not pass are three groups and one loose end:
 **`x/guard.x` loads now**, which it never did before — that was 16 specs, and
 the reason is worth the section below.
 
-## It needs x-r5rs
-
-This bundle does not work alone, and `personality.xon` has no way to say so —
-there is no `(requires-personality …)` row, so `run.x` and
-`tests/gen-harness.sh` each probe for the sibling instead
-([x-lang#526](https://github.com/jonruttan/x-lang/issues/526)).
+## Running it
 
 ```bash
-X=/path/to/x-lang/x.sh sh tests/spec-runner.sh          # sibling checkout
-R5RS_ROOT=/path/to/x-r5rs X=… sh tests/spec-runner.sh   # anywhere else
+make test        # the spec suite
+make install     # into the x on PATH
 ```
 
-For a prompt, both bundles need the usual bridge
-([x-lang#519](https://github.com/jonruttan/x-lang/issues/519)):
+then `x -l r7rs`. `make install` puts the bundle where `-l` looks — an installed
+x searches `<share>/langs/*/lang.xon`.
 
-```bash
-ln -s /path/to/x-r5rs /path/to/x-lang/apps/r5rs
-ln -s "$PWD"          /path/to/x-lang/apps/r7rs
-```
-
-then `./x.sh -l r7rs` from the x-lang repo root.
+**It needs x-r5rs installed too.** `lang.xon` has no row for a lang-to-lang
+dependency ([x-lang#526](https://github.com/jonruttan/x-lang/issues/526)), so
+`run.x` probes for the sibling beside its own root — `langs/r5rs` in an install,
+`languages/x-r5rs` in a checkout. `R5RS_ROOT` overrides it for the suite.
 
 ## What porting it actually cost
 

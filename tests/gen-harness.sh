@@ -15,15 +15,20 @@ set -e
 X_ROOT="$1"
 BUNDLE="$2"
 
-# The x-r5rs bundle this one extends.  Sibling checkout by default; override
-# with R5RS_ROOT for an installed tree.
-# `|| true` because a failing command substitution inside an assignment is a
-# failing assignment, and `set -e` then kills the script BEFORE the refusal
-# below can print -- so a missing dependency reported itself as silence.
-R5RS_ROOT="${R5RS_ROOT:-$(cd "$BUNDLE/../x-r5rs" 2>/dev/null && pwd || true)}"
-if [ -z "$R5RS_ROOT" ] || [ ! -f "$R5RS_ROOT/r5rs/base.x" ]; then
-	echo "x-r7rs: cannot find the x-r5rs bundle it extends" >&2
-	echo "  looked for r5rs/base.x under ${R5RS_ROOT:-$BUNDLE/../x-r5rs}" >&2
+# The x-r5rs bundle this one extends.  lang.xon has no row for a lang-to-lang
+# dependency (x-lang#526), so the sibling is probed here the same way run.x
+# probes it -- an installed tree names the directory after the lang, a checkout
+# after the repository.  R5RS_ROOT overrides both.
+if [ -z "${R5RS_ROOT:-}" ]; then
+	for _c in "$BUNDLE/../r5rs" "$BUNDLE/../x-r5rs"; do
+		if [ -f "$_c/lang.xon" ]; then
+			R5RS_ROOT="$(cd "$_c" && pwd)"; break
+		fi
+	done
+fi
+if [ -z "${R5RS_ROOT:-}" ]; then
+	echo "x-r7rs: cannot find the x-r5rs lang it extends" >&2
+	echo "  looked beside $BUNDLE for r5rs/ and x-r5rs/" >&2
 	echo "  set R5RS_ROOT=/path/to/x-r5rs and retry" >&2
 	exit 1
 fi
@@ -72,7 +77,7 @@ fi
 # 3. NEVER re-include a platform module the tower already has.  The 2024
 #    r7rs-base.x opened with (include "lib/x-core.x"); on top of a booted
 #    tower that is a SEGFAULT with no diagnostic, not an error.  Deleting
-#    that one line alone took the Kernel suite from dead to 68/72.  run.x owns
+#    that one line is what took this suite from dead to 68/72.  run.x owns
 #    the boot; nothing under r7rs/ includes anything from the platform.
 #
 # The bundle root is armed the same way run.x arms it, so `import r7rs/base`
@@ -83,9 +88,7 @@ cat > "$OUT" <<EOF
 (def %install-root "$X_ROOT")
 (include "$X_BASE")
 (import-path! "$BUNDLE")
-; BOTH ROOTS.  R7RS extends R5RS, so the harness arms the bundle it stands on
-; before its own -- the same two-step run.x does, and the same gap: nothing in
-; personality.xon declares the dependency (x-lang#526), so the path is probed.
+; BOTH ROOTS: R7RS extends R5RS, the same two-step run.x does.
 (import-path! "$R5RS_ROOT")
 (import r5rs/base)
 (import r7rs/base)
