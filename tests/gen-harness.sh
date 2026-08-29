@@ -27,8 +27,20 @@ mkdir -p "$BUNDLE/tests/lib"
 # Two spellings are probed because two layouts are both real: an installed tree
 # names the directory after the lang, a development checkout after the
 # repository.  R5RS_ROOT still overrides, for running against a tree elsewhere.
+# THE NAME ONLY, and the version deliberately ignored.  The row may carry one
+# -- (requires-lang "r5rs" "v0.1.0") -- which x.sh checks against the `version`
+# stamp an INSTALL or an unpacked release tarball carries.  A sibling checkout
+# has no stamp and is not supposed to: this harness exists precisely to run the
+# suite against working trees under development, so enforcing the version here
+# would make the suite unrunnable without installing first.  x.sh is where the
+# constraint binds; this is the same bypass --allow-lang-skew is.
+#
+# The pattern must not require ")" after the name, which is what it used to do.
+# The moment a version was added the row stopped matching, DEP_ROOTS came out
+# empty, no r5rs was armed, and all 637 specs failed at once with nothing
+# pointing at the manifest.
 DEP_ROOTS=
-for _req in $(sed -n 's/^(requires-lang "\([^"]*\)").*/\1/p' "$BUNDLE/lang.xon"); do
+for _req in $(sed -n 's/^(requires-lang "\([^"]*\)".*/\1/p' "$BUNDLE/lang.xon"); do
 	_root="${R5RS_ROOT:-}"
 	if [ -z "$_root" ]; then
 		for _c in "$BUNDLE/../$_req" "$BUNDLE/../x-$_req"; do

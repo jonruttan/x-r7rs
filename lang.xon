@@ -54,9 +54,22 @@
 ; because a version row in the dependency's own lang.xon could only be true
 ; at the one commit that gets tagged and would lie at every other.
 ;
-; Left off until x-r5rs is actually tagged.  git describe on an untagged repo
-; answers a bare hash, so any version named here would be one no install could
-; match -- a constraint that fails for everyone is worse than no constraint.
-(requires-lang "r5rs")
+; v0.1.0 is the first tagged x-r5rs, and naming it is what makes this row
+; checkable rather than decorative.  An untagged dependency could not be named
+; at all: git describe answers a bare hash there, so any version written here
+; would be one no install could ever match, and a constraint that fails for
+; everyone is worse than no constraint.
+;
+; WHAT IT CATCHES is the r5rs seam moving under us -- the define mechanism,
+; syntax-rules hygiene, the numeric tower.  This bundle is R5RS plus about 700
+; lines and reaches into all three; before the row, an r5rs installed from a
+; later branch broke r7rs specs with no hint that the cause was next door.
+; Now it refuses at startup, naming both versions and who asked.
+;
+; A CHECKOUT OF R5RS NO LONGER SATISFIES THIS by default -- it carries no
+; stamp, only an install or an unpacked release tarball does.  That is the
+; intended reading, and --allow-lang-skew is the way through while working on
+; both at once.
+(requires-lang "r5rs" "v0.1.0")
 
 (entry "run.x")
