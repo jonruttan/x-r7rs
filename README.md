@@ -16,7 +16,7 @@ $ x -l r7rs
 
 ## Status
 
-**595 of 637 specs green** against x-lang **v0.6.0** and an x-engine-c carrying
+**595 of 637 specs green** against x-lang **v0.7.0** and an x-engine-c carrying
 the [#527](https://github.com/jonruttan/x-lang/issues/527) fix.
 
 Fourth of the five 2024-era langs to come back, and the first to depend
