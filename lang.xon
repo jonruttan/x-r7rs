@@ -10,6 +10,7 @@
 ;   (lang "NAME")               the -l name
 ;   (dialect NAME)              he | xe | rn -- a REQUIREMENT, not a taste
 ;   (requires-release "TAG")    the x-lang this bundle was built against
+;   (requires-lang "NAME")      another lang this one is written on top of
 ;   (entry "FILE")              loaded AFTER the dialect, not instead of it
 
 (lang "r7rs")
@@ -28,5 +29,22 @@
 ; the seam.  It is also what these specs are green against.
 
 (requires-release "v0.6.0")
+
+; R7RS IS R5RS PLUS about 700 lines, and this row is what says so.
+;
+; x.sh resolves it the same way it resolves -l, arms the required lang's root
+; BEFORE this bundle's own (import-path! prepends, so ours still wins any name
+; we share), and refuses at startup naming what is missing and who asked for it.
+;
+; Before the row existed the dependency lived as a probe in run.x: derive our
+; own root, look beside it for r5rs/ or x-r5rs/, and hope.  That made a missing
+; lang a runtime message rather than a refusal, recorded nothing about WHAT was
+; needed, and would have been re-derived by every dependent.  The same argument
+; (dialect ...) already makes -- a requirement belongs in the manifest.
+;
+; No version here, deliberately: lang.xon has no row for a bundle's OWN
+; version, so there is nothing for a constraint to compare against.  Which
+; release you get is lang.pin.xon's question, and it answers it with a digest.
+(requires-lang "r5rs")
 
 (entry "run.x")

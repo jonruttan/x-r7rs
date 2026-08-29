@@ -14,27 +14,44 @@ set -e
 
 X_ROOT="$1"
 BUNDLE="$2"
-
-# The x-r5rs bundle this one extends.  lang.xon has no row for a lang-to-lang
-# dependency (x-lang#526), so the sibling is probed here the same way run.x
-# probes it -- an installed tree names the directory after the lang, a checkout
-# after the repository.  R5RS_ROOT overrides both.
-if [ -z "${R5RS_ROOT:-}" ]; then
-	for _c in "$BUNDLE/../r5rs" "$BUNDLE/../x-r5rs"; do
-		if [ -f "$_c/lang.xon" ]; then
-			R5RS_ROOT="$(cd "$_c" && pwd)"; break
-		fi
-	done
-fi
-if [ -z "${R5RS_ROOT:-}" ]; then
-	echo "x-r7rs: cannot find the x-r5rs lang it extends" >&2
-	echo "  looked beside $BUNDLE for r5rs/ and x-r5rs/" >&2
-	echo "  set R5RS_ROOT=/path/to/x-r5rs and retry" >&2
-	exit 1
-fi
 OUT="$BUNDLE/tests/lib/harness.gen.x"
 
 mkdir -p "$BUNDLE/tests/lib"
+
+# THE REQUIRED LANGS, READ FROM THE MANIFEST.  x.sh resolves (requires-lang ...)
+# itself and arms each root before the bundle's own; the harness does not go
+# through x.sh, so it repeats the resolution here -- but it reads the same rows
+# rather than hardcoding a name, so adding a dependency is still a one-line
+# change to lang.xon.
+#
+# Two spellings are probed because two layouts are both real: an installed tree
+# names the directory after the lang, a development checkout after the
+# repository.  R5RS_ROOT still overrides, for running against a tree elsewhere.
+DEP_ROOTS=
+for _req in $(sed -n 's/^(requires-lang "\([^"]*\)").*/\1/p' "$BUNDLE/lang.xon"); do
+	_root="${R5RS_ROOT:-}"
+	if [ -z "$_root" ]; then
+		for _c in "$BUNDLE/../$_req" "$BUNDLE/../x-$_req"; do
+			if [ -f "$_c/lang.xon" ]; then _root="$(cd "$_c" && pwd)"; break; fi
+		done
+	fi
+	if [ -z "$_root" ]; then
+		echo "x-r7rs: lang '$_req' is required but not beside this bundle" >&2
+		echo "  looked for $_req/ and x-$_req/ next to $BUNDLE" >&2
+		echo "  it is declared by (requires-lang \"$_req\") in lang.xon" >&2
+		exit 1
+	fi
+	DEP_ROOTS="$DEP_ROOTS $_root"
+done
+
+# Built before the heredoc rather than substituted inside it: an unquoted
+# heredoc runs command substitution, and a printf carrying \n through one is
+# a fight not worth having.
+DEP_FORMS=
+for _d in $DEP_ROOTS; do
+	DEP_FORMS="$DEP_FORMS(import-path! \"$_d\")
+"
+done
 
 # WHICH x-base, and why it is not one path.  The contract says a bundle's
 # harness loads boot/x-base.x -- the launcher-free AMALGAM, which carries no
@@ -87,9 +104,7 @@ cat > "$OUT" <<EOF
 ; commit: the two absolute paths below are facts of this machine.
 (def %install-root "$X_ROOT")
 (include "$X_BASE")
-(import-path! "$BUNDLE")
-; BOTH ROOTS: R7RS extends R5RS, the same two-step run.x does.
-(import-path! "$R5RS_ROOT")
+$DEP_FORMS(import-path! "$BUNDLE")
 (import r5rs/base)
 (import r7rs/base)
 (set! %repl-print %r7rs-repl-print)
