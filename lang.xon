@@ -45,11 +45,18 @@
 ; needed, and would have been re-derived by every dependent.  The same argument
 ; (dialect ...) already makes -- a requirement belongs in the manifest.
 ;
-; A VERSION MAY FOLLOW THE NAME, and none does yet.  The row accepts
-; (requires-lang "r5rs" "v0.2.0"), compared for EQUALITY against the version
-; the resolved lang reports -- never parsed, exactly as (requires-release ...)
-; above is.  Ordering and ranges would need a version algebra, and with it a
-; resolver; equality plus --allow-lang-skew is smaller and says what it means.
+; A VERSION FOLLOWS THE NAME, and the row below carries one.  It is compared
+; for EQUALITY against the version the resolved lang reports -- never parsed,
+; exactly as (requires-release ...) above is.  Ordering and ranges would need a
+; version algebra, and with it a resolver; equality plus --allow-lang-skew is
+; smaller and says what it means.
+;
+; EQUALITY IS WHY THIS TRACKS THE PAIRING RATHER THAN THE FLOOR.  v0.2.0 is
+; where the capability landed -- the string ports here are built on that
+; release's polymorphic port source and sink, and against v0.1.0 this bundle
+; does not fail a spec, it fails to load.  But only the declared version
+; satisfies the row, so it names what this was built and tested against.
+; v0.2.1 changed no library file; the floor has not moved, only the pairing.
 ;
 ; What it compares against is DERIVED, not declared: `make install` and
 ; tools/bundle.sh both stamp a `version` file from git describe / the tag,
@@ -77,6 +84,6 @@
 ; stamp, only an install or an unpacked release tarball does.  That is the
 ; intended reading, and --allow-lang-skew is the way through while working on
 ; both at once.
-(requires-lang "r5rs" "v0.2.0")
+(requires-lang "r5rs" "v0.2.1")
 
 (entry "run.x")

@@ -26,7 +26,7 @@ name, if it is missing.
 
 ## Status
 
-**594 of 637 specs green** against x-lang **v0.8.0** and x-r5rs **v0.2.0**.
+**594 of 637 specs green** against x-lang **v0.8.0** and x-r5rs **v0.2.1**.
 
 The 43 that do not pass are recorded by name in
 [`tests/contract/known-failures.txt`](tests/contract/known-failures.txt), and
@@ -83,7 +83,7 @@ The exact block, digest filled in, is published with each release.
 `lang.xon` carries it as a row, not a probe:
 
 ```x
-(requires-lang "r5rs" "v0.2.0")
+(requires-lang "r5rs" "v0.2.1")
 ```
 
 x resolves it the same way it resolves `-l`, arms r5rs's root *before* this
@@ -94,9 +94,15 @@ never parsed, and what it compares against is derived — `make install` and
 a dependency's own manifest could only be true at the one commit that gets
 tagged.
 
-v0.2.0 is a floor this bundle cannot run below: the string ports are built on
-that release's polymorphic port source and sink. Against v0.1.0 x-r7rs does
+**v0.2.0 is where the capability landed** — the string ports here are built on
+that release's polymorphic port source and sink, and against v0.1.0 x-r7rs does
 not fail a spec, it fails to load.
+
+**v0.2.1 is what the row declares**, because the comparison is equality rather
+than a minimum: it answers *which x-r5rs was this built and tested against*,
+and only that version satisfies it. v0.2.1 changed no library file — it is
+v0.2.0 plus the lang kit and the x-lang v0.8.0 pairing — so the floor has not
+moved, only the pairing.
 
 Working on both at once, `--allow-lang-skew` is the way through.
 
