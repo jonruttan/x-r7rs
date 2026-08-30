@@ -34,6 +34,17 @@ jobs:
           git clone --depth 1 --branch "$declared" \
             https://github.com/jonruttan/x-lang.git .x-lang
 
+      # The lang this bundle is built on, at the version lang.xon requires.
+      # Without it no spec runs -- see ci.yml for why the sibling layout the
+      # harness probes for is unavailable on a runner and R5RS_ROOT is used
+      # instead.
+      - name: Check out the lang this bundle requires
+        uses: actions/checkout@v4
+        with:
+          repository: jonruttan/x-r5rs
+          ref: v0.2.0
+          path: .x-r5rs
+
       - name: Build the platform
         working-directory: .x-lang
         run: |
@@ -44,7 +55,8 @@ jobs:
       # THE GATE, not a formality: this is the last point at which a bad
       # bundle can be stopped from acquiring a digest and a URL.
       - name: Run the R7RS specs
-        run: X="$PWD/.x-lang/x.sh" sh tests/spec-gate.sh
+        run: |
+          X="$PWD/.x-lang/x.sh" R5RS_ROOT="$PWD/.x-r5rs" sh tests/spec-gate.sh
 
       - name: Roll the bundle
         id: roll

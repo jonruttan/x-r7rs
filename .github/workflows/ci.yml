@@ -49,6 +49,37 @@ jobs:
           ref: ${{ matrix.x-lang }}
           path: .x-lang
 
+      # THE LANG THIS BUNDLE IS BUILT ON.  x-r7rs is R7RS over x-r5rs, and
+      # without this the harness reports "lang 'r5rs' is required but not
+      # beside this bundle" and no spec runs at all -- which is how this CI
+      # spent its whole life before the gate's totals check named it.
+      #
+      # AT THE VERSION lang.xon DECLARES, checked below rather than trusted.
+      # A dependency fetched at main would make this suite green against
+      # something no consumer of a release will have.
+      #
+      # actions/checkout cannot write outside the workspace, so the sibling
+      # layout the harness probes for (../x-r5rs) is unavailable here.
+      # gen-harness.sh honours R5RS_ROOT for exactly this case, and the spec
+      # step sets it.
+      - name: Check out the lang this bundle requires
+        uses: actions/checkout@v4
+        with:
+          repository: jonruttan/x-r5rs
+          ref: v0.2.0
+          path: .x-r5rs
+
+      # Same argument as the release row below: a declaration nothing checks
+      # is decoration.  These two are one fact.
+      - name: Check the required lang against the checkout
+        run: |
+          declared=$(sed -n 's/^(requires-lang "r5rs" "\(.*\)")$/\1/p' lang.xon)
+          if [ "$declared" != "v0.2.0" ]; then
+            echo "lang.xon requires r5rs $declared, the workflow checks out v0.2.0" >&2
+            echo "update one or the other -- they are the same fact" >&2
+            exit 1
+          fi
+
 
       # The bundle declares a release; CI proves the declaration is not
       # decoration.  A drifted pin is a loud failure on the pinned leg, never
@@ -80,7 +111,8 @@ jobs:
       # differ in EITHER direction -- a new failure, or a recorded one that now
       # passes.
       - name: Run the R7RS specs
-        run: X="$PWD/.x-lang/x.sh" sh tests/spec-gate.sh
+        run: |
+          X="$PWD/.x-lang/x.sh" R5RS_ROOT="$PWD/.x-r5rs" sh tests/spec-gate.sh
 
   relocatable:
     # THE RULE THAT ACTUALLY KILLED THE LAST GENERATION, as a gate -- and it
