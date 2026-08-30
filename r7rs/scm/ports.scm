@@ -1,8 +1,17 @@
-; --- Ports (R7RS §6.13) -- NOT LOADED IN THIS RELEASE ---
+; --- Ports (R7RS §6.13) ---
 ;
-; This file EXTENDS the R5RS port layer, which the x-r5rs bundle also defers
-; (see r5rs/scm/ports.scm).  There is nothing here to load on top of.  Both
-; come back together or not at all.
+; This file EXTENDS the R5RS port layer (x-r5rs, r5rs/scm/ports.scm), which
+; provides the representation, the predicates, read-char, read and the file
+; procedures.  What R7RS adds on top is STRING ports, and they are built on
+; that layer's %strsrc source rather than on anything of their own.
+;
+; A REWRITE.  The 2024 version created a temp file per string port --
+; mkstemp/unlink/write/lseek through dlsym'd libc -- so that every port had a
+; real descriptor and read-char could stay fd-only.  It cost a filesystem
+; round trip per port, made the bundle need radon for dlopen, and left a temp
+; file behind on any error path between mkstemp and unlink.  The R5RS layer's
+; source slot is polymorphic now, so a string port is a string and a cursor
+; and nothing else.
 
 ; --- Port extensions (R7RS §6.13) ---
 
@@ -12,67 +21,82 @@
         ((output-port? p) (close-output-port p))))
 
 ; --- String input ports (R7RS §6.13.3) ---
-; Implementation: write string to a temp file, open for reading.
+;
+; %strsrc carries the string and the cursor; %make-port wraps it as an
+; ordinary input port.  read-char, peek-char and read all reach it through
+; %src-getc without knowing it is not a file.
+(define (open-input-string str) (%make-port 'input (%strsrc str)))
 
-(define %c-mkstemp (dlsym %libc "mkstemp"))
-(define %c-unlink (dlsym %libc "unlink"))
-(define %c-write-raw (dlsym %libc "write"))
-(define %c-memcpy (dlsym %libc "memcpy"))
-(define %c-lseek (dlsym %libc "lseek"))
+; close on a string port has nothing to release -- there is no descriptor --
+; but it must still answer, because R7RS lets a program close any port it
+; opened.  Closing an fd port keeps the R5RS behaviour.
+(define (close-input-port p)
+  (if (%strsrc? (%port-fd p)) '() (File close (%port-fd p))))
 
-(define (open-input-string str)
-  ; Create temp file
-  (let ((template (string-copy "/tmp/xstr-XXXXXX")))
-    (let ((fd (ptr-call %c-mkstemp (string->ptr template))))
-      (if (< fd 0) (error "open-input-string: mkstemp failed"))
-      ; Unlink immediately (file stays open but name removed)
-      (ptr-call %c-unlink (string->ptr template))
-      ; Write string content
-      (let ((len (string-length str)))
-        (if (> len 0)
-          (ptr-call %c-write-raw fd (string->ptr str) len)))
-      ; Seek back to start
-      (ptr-call %c-lseek fd 0 0)
-      ; Create input port
-      (%make-port fd (lit input)
-        (obj-make "BUFFER"
-          (int->ptr (ptr-call %c-malloc 65536)) 32)))))
+; --- String output ports (R7RS §6.13.3) -----------------------------------
+;
+; The R5RS layer is emphatic that nothing may shadow the renderers, and this
+; file does not: a port argument is a SCOPED REDIRECT.  %out-fd already
+; selects where the platform's printer emits, and %sink-put! already accepts
+; a %strsink there, so (display x p) is display -- the real one, reaching
+; every renderer it always reached -- with the sink pointed at p's box for
+; the duration of the call.
+;
+; What is shadowed is only the ARITY.  R7RS gives display, write, write-char
+; and newline an optional port argument; R5RS gives them none.  Each wrapper
+; below delegates to the captured original and adds nothing but the redirect.
+(define (open-output-string) (%make-port 'output (%strsink)))
+(define (get-output-string p) (%strsink-str (%port-fd p)))
 
-; --- String output ports (R7RS §6.13.3) ---
-; Implementation: write to a temp file, read back for get-output-string.
+; Restores the destination but not the sink, for the reason with-output-to-file
+; gives: a transcript may be installed underneath and must outlive this.
+(define (%with-port-out p thunk)
+  (let ((saved (car %out-fd)))
+    (do
+      (%sink-install!)
+      (set-car! %out-fd (%port-fd p))
+      (let ((r (thunk)))
+        (do (set-car! %out-fd saved) r)))))
 
-(define %c-read-raw (dlsym %libc "read"))
-(define %c-free (dlsym %libc "free"))
+; The platform's display is VARIADIC -- (display a "/" b) is how rational.x
+; renders 10/3, and complex.x does the same with "i".  So an extra argument
+; is already meaningful here, and R7RS's optional port cannot be told from it
+; by arity alone.  Dispatch on the VALUE: one extra argument that is a port
+; is R7RS's port argument; anything else is the platform's variadic display,
+; and is passed straight through.  Getting this wrong segfaults the engine --
+; %port-fd of a string hands a garbage descriptor to File write.
+(define %base-display display)
+(define %base-write write)
+(define %base-write-char write-char)
+(define %base-newline newline)
 
-(define %string-output-port-tag (cons (lit %string) (lit output)))
+(define (%port-arg? rest)
+  (and (pair? rest) (null? (cdr rest)) (port? (car rest))))
 
-(define (open-output-string)
-  (let ((template (string-copy "/tmp/xout-XXXXXX")))
-    (let ((fd (ptr-call %c-mkstemp (string->ptr template))))
-      (if (< fd 0) (error "open-output-string: mkstemp failed"))
-      (ptr-call %c-unlink (string->ptr template))
-      ; Store the tag in the port's buffer slot to identify string ports
-      (%make-port fd (lit output) %string-output-port-tag))))
+(define (display x . rest)
+  (cond ((null? rest) (%base-display x))
+        ((%port-arg? rest)
+         (%with-port-out (car rest) (lambda () (%base-display x))))
+        (else (apply %base-display (cons x rest)))))
 
-(define (%string-output-port? p)
-  (and (output-port? p) (eq? (%port-buffer p) %string-output-port-tag)))
+(define (write x . rest)
+  (cond ((null? rest) (%base-write x))
+        ((%port-arg? rest)
+         (%with-port-out (car rest) (lambda () (%base-write x))))
+        (else (apply %base-write (cons x rest)))))
 
-(define (get-output-string p)
-  (if (not (%string-output-port? p))
-    (error "get-output-string: not a string output port"))
-  (let ((fd (%port-fd p)))
-    ; Get current position (= total bytes written)
-    (let ((len (ptr-call %c-lseek fd 0 1)))
-      ; Seek to start
-      (ptr-call %c-lseek fd 0 0)
-      ; Read all content
-      (if (<= len 0) ""
-        (let ((buf (int->ptr (ptr-call %c-malloc (+ len 1)))))
-          (ptr-call %c-read-raw fd buf len)
-          ; Null-terminate
-          (ptr-set! buf len 0 1)
-          ; Seek back to end for further writes
-          (ptr-call %c-lseek fd 0 2)
-          (let ((result (ptr->string buf)))
-            (ptr-call %c-free buf)
-            result))))))
+(define (write-char c . rest)
+  (cond ((null? rest) (%base-write-char c))
+        ((%port-arg? rest)
+         (%with-port-out (car rest) (lambda () (%base-write-char c))))
+        (else (apply %base-write-char (cons c rest)))))
+
+(define (newline . rest)
+  (cond ((null? rest) (%base-newline))
+        ((%port-arg? rest)
+         (%with-port-out (car rest) (lambda () (%base-newline))))
+        (else (apply %base-newline rest))))
+
+; Symmetric with close-input-port: a string port holds no descriptor.
+(define (close-output-port p)
+  (if (%strsink? (%port-fd p)) '() (File close (%port-fd p))))

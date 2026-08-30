@@ -56,11 +56,16 @@
 ; because a version row in the dependency's own lang.xon could only be true
 ; at the one commit that gets tagged and would lie at every other.
 ;
-; v0.1.0 is the first tagged x-r5rs, and naming it is what makes this row
+; v0.1.0 was the first tagged x-r5rs, and naming it is what makes this row
 ; checkable rather than decorative.  An untagged dependency could not be named
 ; at all: git describe answers a bare hash there, so any version written here
 ; would be one no install could ever match, and a constraint that fails for
 ; everyone is worse than no constraint.
+;
+; v0.2.0 IS A FLOOR THIS BUNDLE CANNOT RUN BELOW, not a refresh.  The string
+; ports below are built on that release's %strsrc and %strsink -- the
+; polymorphic source and sink -- which v0.1.0 does not have.  Against v0.1.0
+; this bundle does not fail a spec, it fails to load.
 ;
 ; WHAT IT CATCHES is the r5rs seam moving under us -- the define mechanism,
 ; syntax-rules hygiene, the numeric tower.  This bundle is R5RS plus about 700
@@ -72,6 +77,6 @@
 ; stamp, only an install or an unpacked release tarball does.  That is the
 ; intended reading, and --allow-lang-skew is the way through while working on
 ; both at once.
-(requires-lang "r5rs" "v0.1.0")
+(requires-lang "r5rs" "v0.2.0")
 
 (entry "run.x")

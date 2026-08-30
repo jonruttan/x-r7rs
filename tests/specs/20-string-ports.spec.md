@@ -24,7 +24,7 @@
 (read-char p)
 ```
 ---
-    h
+    #\h
 
 ### multiple read-chars
 
@@ -33,7 +33,7 @@
 (list (read-char p) (read-char p))
 ```
 ---
-    (a b)
+    (#\a #\b)
 
 ### eof after string exhausted
 
@@ -141,4 +141,4 @@
 (string-length (get-output-string p))
 ```
 ---
-    9
+    8

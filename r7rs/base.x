@@ -60,5 +60,8 @@
 (include-once "./scm/vector.scm")
 (include-once "./scm/error.scm")
 (include-once "./scm/control.scm")
-; ./scm/ports.scm is NOT loaded: it extends the R5RS port layer, which the
-; x-r5rs bundle also defers.  Both come back together or not at all.
+; ./scm/ports.scm EXTENDS the R5RS port layer, which x-r5rs now loads -- the
+; note here said both were deferred together, and that stopped being true when
+; that bundle rewrote its ports onto the platform's File.  What this adds is
+; string ports, built on that layer's polymorphic source.
+(include-once "./scm/ports.scm")
