@@ -38,12 +38,16 @@ jobs:
       # Without it no spec runs -- see ci.yml for why the sibling layout the
       # harness probes for is unavailable on a runner and R5RS_ROOT is used
       # instead.
+      # Cloned rather than checked out, for the same reason the x-lang step
+      # above is: the version comes FROM lang.xon.  A literal ref here would
+      # be a second copy of the fact on the one path where getting it wrong
+      # publishes a bundle built against a dependency nobody declared.
       - name: Check out the lang this bundle requires
-        uses: actions/checkout@v4
-        with:
-          repository: jonruttan/x-r5rs
-          ref: v0.2.0
-          path: .x-r5rs
+        run: |
+          declared=$(sed -n 's/^(requires-lang "r5rs" "\(.*\)")$/\1/p' lang.xon)
+          echo "lang.xon requires r5rs $declared"
+          git clone --depth 1 --branch "$declared" \
+            https://github.com/jonruttan/x-r5rs.git .x-r5rs
 
       - name: Build the platform
         working-directory: .x-lang

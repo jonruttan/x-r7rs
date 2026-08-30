@@ -24,7 +24,34 @@ on:
     - cron: '0 6 * * 1'
 
 jobs:
+  # THE VERSIONS ARE READ, NOT WRITTEN.  Both the pinned matrix leg and the
+  # x-r5rs ref used to be literals kept equal to lang.xon by checks further
+  # down -- two copies of each fact, with a gate to catch the drift between
+  # them.  Deriving them removes the second copy instead of guarding it, which
+  # is the same ruling tools/check/release-refs.sh applies everywhere else
+  # these versions are named.
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      legs: ${{ steps.decl.outputs.legs }}
+      r5rs: ${{ steps.decl.outputs.r5rs }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: decl
+        name: Read the declared versions from lang.xon
+        run: |
+          release=$(sed -n 's/^(requires-release "\(.*\)")$/\1/p' lang.xon)
+          r5rs=$(sed -n 's/^(requires-lang "r5rs" "\(.*\)")$/\1/p' lang.xon)
+          if [ -z "$release" ] || [ -z "$r5rs" ]; then
+            echo "lang.xon is missing (requires-release ...) or (requires-lang \"r5rs\" ...)" >&2
+            exit 1
+          fi
+          echo "legs=[\"$release\", \"main\"]" >> "$GITHUB_OUTPUT"
+          echo "r5rs=$r5rs" >> "$GITHUB_OUTPUT"
+          echo "x-lang $release and main; x-r5rs $r5rs"
+
   specs:
+    needs: prepare
     name: specs @ x-lang ${{ matrix.x-lang }}
     runs-on: ubuntu-latest
     continue-on-error: ${{ matrix.x-lang == 'main' }}
@@ -34,10 +61,9 @@ jobs:
         # BOTH LEGS, AND THEY ANSWER DIFFERENT QUESTIONS.  The pinned leg
         # proves this bundle still runs on the platform it DECLARES; the main
         # leg is an early warning that x-lang has moved underneath it, and is
-        # allowed to fail.  Keep the pinned row equal to lang.xon's
-        # (requires-release ...) VERBATIM -- they are one fact, and the check
-        # below fails the build if they drift.
-        x-lang: ['v0.7.0', 'main']
+        # allowed to fail.  The pinned row comes from lang.xon via `prepare`,
+        # so there is nothing here to keep in sync.
+        x-lang: ${{ fromJSON(needs.prepare.outputs.legs) }}
 
     steps:
       - uses: actions/checkout@v4
@@ -54,7 +80,7 @@ jobs:
       # beside this bundle" and no spec runs at all -- which is how this CI
       # spent its whole life before the gate's totals check named it.
       #
-      # AT THE VERSION lang.xon DECLARES, checked below rather than trusted.
+      # AT THE VERSION lang.xon DECLARES, read from it rather than repeated.
       # A dependency fetched at main would make this suite green against
       # something no consumer of a release will have.
       #
@@ -66,33 +92,8 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: jonruttan/x-r5rs
-          ref: v0.2.0
+          ref: ${{ needs.prepare.outputs.r5rs }}
           path: .x-r5rs
-
-      # Same argument as the release row below: a declaration nothing checks
-      # is decoration.  These two are one fact.
-      - name: Check the required lang against the checkout
-        run: |
-          declared=$(sed -n 's/^(requires-lang "r5rs" "\(.*\)")$/\1/p' lang.xon)
-          if [ "$declared" != "v0.2.0" ]; then
-            echo "lang.xon requires r5rs $declared, the workflow checks out v0.2.0" >&2
-            echo "update one or the other -- they are the same fact" >&2
-            exit 1
-          fi
-
-
-      # The bundle declares a release; CI proves the declaration is not
-      # decoration.  A drifted pin is a loud failure on the pinned leg, never
-      # a silently-green build against a platform nobody checked.
-      - name: Check the declared release against the checkout
-        if: matrix.x-lang != 'main'
-        run: |
-          declared=$(sed -n 's/^(requires-release "\(.*\)")$/\1/p' lang.xon)
-          if [ "$declared" != "${{ matrix.x-lang }}" ]; then
-            echo "lang.xon declares $declared, matrix leg is ${{ matrix.x-lang }}" >&2
-            echo "update one or the other -- they are the same fact" >&2
-            exit 1
-          fi
 
       # The engine is acquired, not built: x-lang pins one and knows how to
       # fetch it.  Nothing here reimplements that.
@@ -127,6 +128,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: The declared versions are named once
+        run: sh tools/check/release-refs.sh
+
       - name: No path literals outside run.x
         run: |
           # Match the entry however grep spells its path (./run.x or run.x),
