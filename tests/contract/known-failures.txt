@@ -1,0 +1,102 @@
+# known-failures.txt -- the specs this bundle is known to fail.
+#
+# One "UNIT: TEST" per line, matching the runner's own `FAIL:` lines verbatim.
+# Blank lines and #-comments are ignored.
+#
+# BY NAME, NOT BY COUNT, and the difference is the whole point.  A budget of
+# "49 failures" is satisfied by fixing one and breaking another, which is the
+# exact event a ratchet exists to catch.  Names catch it; a number cannot.
+#
+# THE LIST MAY ONLY SHRINK.  tests/spec-gate.sh is red when a failure appears
+# that is not here, AND when a line here starts passing -- the second is a fix
+# nobody wrote down, and leaving it listed would quietly re-authorise the
+# failure later.
+#
+# MEASURED ALONE, and that is not a detail.  Running this suite alongside the
+# other bundles inflates it: under that load the same tree reported 58 rather
+# than 49, the extra names being string-port tests whose batch hit the runner's
+# timeout.  Two isolated runs give this set exactly.  A number taken from a
+# six-suite sweep is a number about the machine.
+#
+# AGAINST x-lang v0.7.0, which pins x-engine-c v0.1.2.  That pairing is what
+# lang.xon declares and what CI checks out, so it is what this list describes.
+#
+# A line here is not a target and not an excuse.  It is debt this bundle is
+# known to be carrying, recorded so it cannot grow in silence.
+
+# --- Bytevectors (23) ------------------------------------------------------
+#
+# R7RS 6.9.  x/bytevector.x is not loaded: the 2024 module was built on FFI
+# entry points that no longer exist, and the platform ships Buf now.  Like
+# ports in x-r5rs this is a rewrite against a better substrate rather than a
+# port, and it has not been done.
+bytevector-append: append empty
+bytevector-append: append three bytevectors
+bytevector-append: append two bytevectors
+bytevector-copy!: copy into target
+bytevector-copy: copy whole bytevector
+bytevector-copy: copy with start
+bytevector-copy: copy with start and end
+bytevector-length: length of bytevector
+bytevector-length: length of empty bytevector
+bytevector-u8-ref: ref first element
+bytevector-u8-ref: ref last element
+bytevector-u8-set!: set element
+bytevector: create bytevector
+bytevector: empty bytevector
+bytevector?: bytevector predicate false
+bytevector?: bytevector predicate true
+make-bytevector: make-bytevector with default fill
+make-bytevector: make-bytevector with fill
+make-bytevector: make-bytevector zero length
+string->utf8: basic conversion
+string->utf8: conversion with range
+utf8->string: basic conversion
+utf8->string: conversion with range
+
+# --- String ports (8) ------------------------------------------------------
+#
+# open-input-string / open-output-string.  x-r5rs grew file ports against
+# File; these are the in-memory pair, which need a buffer that presents as a
+# port rather than a descriptor.  Not started.
+open-output-string: get-output-string empty
+open-output-string: newline to string port
+open-output-string: output string port is output port
+open-output-string: write multiple to string port
+open-output-string: write to string port
+open-output-string: write-char to string port
+
+# --- Error objects and guard (16) ------------------------------------------
+#
+# R7RS 6.11.  `error` must raise an object carrying its message and
+# irritants, and `guard` must bind it -- this bundle's guard is a shadow that
+# works around the engine's frame-depth binding rather than a full
+# implementation.  x-engine-c v0.1.3 ships (base def-global), which is the
+# capability that would let the shadow go, but the bundle has not adopted it
+# and x-lang v0.7.0 does not pin that engine yet.
+error objects: error-object-irritants returns list
+error objects: error-object-message on caught error
+error objects: error-object? on caught error
+error: error creates error object
+error: error raises exception
+error: error with irritants
+error: error-object-irritants empty
+error: error-object-message
+error: error-object-message with irritants
+guard with computation: guard in define
+guard with computation: guard in let
+guard with cond clauses: guard error-object? always matches
+guard with cond clauses: guard with else clause
+guard with cond clauses: guard with error-object clause
+guard: guard catches error
+guard: guard handler uses error message
+
+# --- Numerics and cond-expand (4) ------------------------------------------
+#
+# float arithmetic and expt are exactness questions of the kind x-r5rs sorted
+# out against R7RS 6.2; cond-expand needs a feature list this bundle does not
+# publish yet.
+cond-expand: body with multiple expressions
+expt: expt with float base
+float arithmetic: float addition
+float arithmetic: float multiplication
