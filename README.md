@@ -26,7 +26,7 @@ name, if it is missing.
 
 ## Status
 
-**594 of 637 specs green** against x-lang **v0.8.1** and x-r5rs **v0.2.1**.
+**594 of 637 specs green** against x-lang **v0.8.1** and x-r5rs **v0.2.2**.
 
 The 43 that do not pass are recorded by name in
 [`tests/contract/known-failures.txt`](tests/contract/known-failures.txt), and
@@ -83,7 +83,7 @@ The exact block, digest filled in, is published with each release.
 `lang.xon` carries it as a row, not a probe:
 
 ```x
-(requires-lang "r5rs" "v0.2.1")
+(requires-lang "r5rs" "v0.2.2")
 ```
 
 x resolves it the same way it resolves `-l`, arms r5rs's root *before* this
@@ -98,11 +98,15 @@ tagged.
 that release's polymorphic port source and sink, and against v0.1.0 x-r7rs does
 not fail a spec, it fails to load.
 
-**v0.2.1 is what the row declares**, because the comparison is equality rather
+**v0.2.2 is what the row declares**, because the comparison is equality rather
 than a minimum: it answers *which x-r5rs was this built and tested against*,
-and only that version satisfies it. v0.2.1 changed no library file — it is
-v0.2.0 plus the lang kit and the x-lang v0.8.0 pairing (release-ref: history)
-that it carried — so the floor has not moved, only the pairing.
+and only that version satisfies it. Nothing under `r5rs/` has changed since
+v0.2.0 — the releases since are the lang kit and successive x-lang pairings —
+so the floor has not moved, only the pairing.
+
+That is also the cost of equality matching: every x-r5rs release obsoletes this
+row, so the two move in lockstep. It is the price of *never parsed*, paid
+deliberately instead of building a resolver.
 
 Working on both at once, `--allow-lang-skew` is the way through.
 

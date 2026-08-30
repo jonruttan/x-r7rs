@@ -56,7 +56,10 @@
 ; release's polymorphic port source and sink, and against v0.1.0 this bundle
 ; does not fail a spec, it fails to load.  But only the declared version
 ; satisfies the row, so it names what this was built and tested against.
-; v0.2.1 changed no library file; the floor has not moved, only the pairing.
+; Nothing under r5rs/ has changed since v0.2.0; the releases since are the lang
+; kit and successive x-lang pairings, so the floor has not moved, only the
+; pairing.  Every x-r5rs release obsoletes this row -- the two move in lockstep,
+; which is the price of "compared for equality, never parsed".
 ;
 ; What it compares against is DERIVED, not declared: `make install` and
 ; tools/bundle.sh both stamp a `version` file from git describe / the tag,
@@ -84,6 +87,6 @@
 ; stamp, only an install or an unpacked release tarball does.  That is the
 ; intended reading, and --allow-lang-skew is the way through while working on
 ; both at once.
-(requires-lang "r5rs" "v0.2.1")
+(requires-lang "r5rs" "v0.2.2")
 
 (entry "run.x")
