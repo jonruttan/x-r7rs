@@ -73,18 +73,25 @@ scan() {
 			# Rebuild the text: the content may itself contain colons.
 			text = $0
 			sub(/^[^:]*:[^:]*:/, "", text)
-			rest = text; off = 0
+			rest = text; off = 0; prev = 0
 			while (match(rest, /v[0-9]+\.[0-9]+\.[0-9]+/)) {
 				ver   = substr(rest, RSTART, RLENGTH)
 				start = off + RSTART
-				pre   = substr(text, 1, start - 1)
-				from  = length(pre) - 24
-				if (from < 1) from = 1
-				win = substr(pre, from)
-				at = index(win, name)
+				# THE WINDOW STOPS AT THE PREVIOUS VERSION.  A flat look-back
+				# lets one pair span another: where a line names x-lang, then a
+				# version, then x-r5rs, then a second version, the window from
+				# the second reaches x-lang and reports it as claiming the wrong
+				# one.  A name owns a version only when no other version stands
+				# between them.  CI caught this on THIS file, whose header quotes
+				# such a line as an example.
+				from = prev + 1
+				if (start - 24 > from) from = start - 24
+				win = substr(text, from, start - from)
+				at  = index(win, name)
 				if (at > 0 && index(substr(win, at), "#") == 0 && ver != want)
 					printf "%s:%s names %s %s, lang.xon declares %s\n",
 						file, lineno, name, ver, want
+				prev = start + RLENGTH - 1
 				off  = off + RSTART + RLENGTH - 1
 				rest = substr(rest, RSTART + RLENGTH)
 			}
