@@ -26,7 +26,7 @@ name, if it is missing.
 
 ## Status
 
-**594 of 637 specs green** against x-lang **v0.8.0** and x-r5rs **v0.2.1**.
+**594 of 637 specs green** against x-lang **v0.8.1** and x-r5rs **v0.2.1**.
 
 The 43 that do not pass are recorded by name in
 [`tests/contract/known-failures.txt`](tests/contract/known-failures.txt), and
@@ -101,8 +101,8 @@ not fail a spec, it fails to load.
 **v0.2.1 is what the row declares**, because the comparison is equality rather
 than a minimum: it answers *which x-r5rs was this built and tested against*,
 and only that version satisfies it. v0.2.1 changed no library file — it is
-v0.2.0 plus the lang kit and the x-lang v0.8.0 pairing — so the floor has not
-moved, only the pairing.
+v0.2.0 plus the lang kit and the x-lang v0.8.0 pairing (release-ref: history)
+that it carried — so the floor has not moved, only the pairing.
 
 Working on both at once, `--allow-lang-skew` is the way through.
 
