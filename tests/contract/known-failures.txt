@@ -13,12 +13,12 @@
 # failure later.
 #
 # MEASURED ALONE, and that is not a detail.  Running this suite alongside the
-# other bundles inflates it: under that load the same tree reported 58 rather
-# than 49, the extra names being string-port tests whose batch hit the runner's
-# timeout.  Two isolated runs give this set exactly.  A number taken from a
-# six-suite sweep is a number about the machine.
+# other bundles inflates it: under that load a batch can hit the runner's
+# timeout, and every test after the timeout in that batch is reported failing
+# whatever it would have done.  Two isolated runs give this set exactly.  A
+# number taken from a six-suite sweep is a number about the machine.
 #
-# AGAINST x-lang v0.7.0, which pins x-engine-c v0.1.2.  That pairing is what
+# AGAINST x-lang v0.7.0, which pins x-engine-c v0.1.3.  That pairing is what
 # lang.xon declares and what CI checks out, so it is what this list describes.
 #
 # A line here is not a target and not an excuse.  It is debt this bundle is
@@ -53,18 +53,6 @@ string->utf8: basic conversion
 string->utf8: conversion with range
 utf8->string: basic conversion
 utf8->string: conversion with range
-
-# --- String ports (8) ------------------------------------------------------
-#
-# open-input-string / open-output-string.  x-r5rs grew file ports against
-# File; these are the in-memory pair, which need a buffer that presents as a
-# port rather than a descriptor.  Not started.
-open-output-string: get-output-string empty
-open-output-string: newline to string port
-open-output-string: output string port is output port
-open-output-string: write multiple to string port
-open-output-string: write to string port
-open-output-string: write-char to string port
 
 # --- Error objects and guard (16) ------------------------------------------
 #
