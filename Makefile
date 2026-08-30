@@ -67,7 +67,7 @@ check: check-release-refs ## Run the suite against tests/contract/known-failures
 # README naming a pairing nobody tested -- ships silently otherwise.
 .PHONY: check-release-refs
 check-release-refs: ## Assert the declared x-lang and x-r5rs versions are named once
-	sh tools/check/release-refs.sh
+	X="$(X)" sh tools/check/release-refs.sh
 
 .PHONY: bundle
 bundle: ## Roll a release tarball and print its pin
