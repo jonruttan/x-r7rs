@@ -17,13 +17,17 @@
 # something else is running is a number about the machine, so take it twice and
 # make sure nothing else is running.
 #
-# AGAINST x-lang v0.8.1, which pins x-engine-c v0.1.4 -- what lang.xon declares
-# and what CI checks out.  The set is 43 on v0.1.2, v0.1.3 and v0.1.4 alike, so
-# nothing here is waiting on the engine pin; measured on all three.
+# AGAINST x-lang v0.9.0 -- what lang.xon declares and what CI checks out.
 #
-# v0.1.4's reader fix took x-r5rs from nine failures to none, and moved nothing
-# here: this bundle's debt is bytevectors, error objects and guard, none of
-# which the reader touches.
+# THE LIST SHRANK FROM 43 TO 27 WITHOUT A LINE CHANGING UNDER r7rs/, and the
+# ratchet is what said so: sixteen recorded failures started passing on the
+# platform, which is red here in the "a fix left unrecorded re-authorises the
+# failure later" direction.  Fifteen were the error-object and guard group and
+# one was a cond-expand body; what remains of that group is a single clause.
+#
+# The capability was named in this file before it was adopted: the old note
+# said the guard shadow works around the engine's frame-depth binding and that
+# (base def-global) would let the shadow go.  It has, upstream.
 
 # --- Bytevectors (23) ------------------------------------------------------
 #
@@ -56,37 +60,28 @@ string->utf8: conversion with range
 utf8->string: basic conversion
 utf8->string: conversion with range
 
-# --- Error objects and guard (16) ------------------------------------------
+# --- Error objects and guard (1) -------------------------------------------
 #
-# R7RS 6.11.  `error` must raise an object carrying its message and irritants,
-# and `guard` must bind it.  This bundle's guard is a shadow that works around
-# the engine's frame-depth binding rather than a full implementation --
-# x-engine-c v0.1.3 ships (base def-global), the capability that would let the
-# shadow go, and the bundle has not adopted it.
-error objects: error-object-irritants returns list
-error objects: error-object-message on caught error
-error objects: error-object? on caught error
-error: error creates error object
-error: error raises exception
-error: error with irritants
-error: error-object-irritants empty
-error: error-object-message
-error: error-object-message with irritants
-guard with computation: guard in define
-guard with computation: guard in let
-guard with cond clauses: guard error-object? always matches
+# R7RS 6.11, and this was fifteen lines longer until v0.9.0.  `error` raising an
+# object that carries its message and irritants, and `guard` binding it, both
+# work now -- the whole error-object surface and every guard case except the one
+# below.
+#
+# WHAT IS LEFT IS ONE CLAUSE, not a remnant of the group: `else` in a guard's
+# cond clauses.  Every other clause form passes, including the error-object
+# clause and the always-matching predicate, which puts this in the clause
+# dispatcher rather than in error objects at all.  It is the last line of a
+# section whose reason for existing has gone.
 guard with cond clauses: guard with else clause
-guard with cond clauses: guard with error-object clause
-guard: guard catches error
-guard: guard handler uses error message
 
-# --- Numerics and cond-expand (4) ------------------------------------------
+# --- Numerics (3) ----------------------------------------------------------
 #
 # float arithmetic and expt are exactness questions of the kind x-r5rs settled
 # against R5RS 6.2.5 -- exact where the argument is exact and the value is
-# exactly representable.  The same treatment would fix these.  cond-expand
-# needs a feature list this bundle does not publish yet.
-cond-expand: body with multiple expressions
+# exactly representable.  The same treatment would fix these.
+#
+# cond-expand was the fourth here and passes now; the feature list this bundle
+# did not publish is no longer what that case needed.
 expt: expt with float base
 float arithmetic: float addition
 float arithmetic: float multiplication

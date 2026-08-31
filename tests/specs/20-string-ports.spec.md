@@ -1,3 +1,5 @@
+# @weight 4
+
 ## open-input-string
 
 ### string port is input port

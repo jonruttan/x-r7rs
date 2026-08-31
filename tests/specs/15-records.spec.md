@@ -1,3 +1,5 @@
+# @weight 4
+
 ## define-record-type basics
 
 ### define-record-type returns name

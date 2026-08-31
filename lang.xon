@@ -31,7 +31,7 @@
 ; THAT rather than the floor -- the question it answers is "what was this built
 ; against", not "what is the oldest that would still work".
 
-(requires-release "v0.8.1")
+(requires-release "v0.9.0")
 
 ; R7RS IS R5RS PLUS about 700 lines, and this row is what says so.
 ;

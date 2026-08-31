@@ -1,3 +1,5 @@
+# @weight 4
+
 ## cond-expand
 
 ### match r7rs feature
