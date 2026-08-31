@@ -16,8 +16,9 @@ $ x -l r7rs
 "hi"
 ```
 
-x-r7rs is a **lang**: a surface language loaded over an x-lang dialect, free
-to re-mean shared spellings. The terms are in x-lang's
+x-r7rs is a **lang**: a surface language loaded over an x-lang dialect. Where
+x-lang and Scheme spell something the same way, Scheme is free to mean
+something different by it. The terms are in x-lang's
 [lang contract](https://github.com/jonruttan/x-lang/blob/main/docs/lang-contract.md).
 
 It is the first lang built on another lang rather than straight on the
