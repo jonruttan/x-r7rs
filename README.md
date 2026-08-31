@@ -27,9 +27,14 @@ name, if it is missing.
 
 ## Status
 
-**594 of 637 specs green** against x-lang **v0.8.1** and x-r5rs **v0.2.2**.
+**610 of 637 specs green** against x-lang **v0.9.0** and x-r5rs **v0.2.2**.
 
-The 43 that do not pass are recorded by name in
+Sixteen of the recorded failures went on v0.9.0 without a line changing under
+`r7rs/` — the whole error-object surface and every `guard` case but one. The
+contract shrank from 43 to 27 because the ratchet is red in *both* directions,
+so a fix cannot land unrecorded.
+
+The 27 that do not pass are recorded by name in
 [`tests/contract/known-failures.txt`](tests/contract/known-failures.txt), and
 CI gates on that list rather than on a count — red when a new failure appears
 *and* red when a recorded one starts passing. Documented debt can ship; a
@@ -38,8 +43,8 @@ regression cannot.
 | | count | why |
 |---|---|---|
 | **Bytevectors** | 23 | `x/bytevector.x` not loaded — raw FFI against `obj-make`, which no longer exists. |
-| **Error objects and `guard`** | 16 | `error-object?` and friends; one edge of the clause dispatcher. |
-| **Numerics and `cond-expand`** | 4 | `4.0` where the 2024 suite expects `4`, and one feature-id case. |
+| **`guard` with `else`** | 1 | the last of a group of 16; every other clause form passes, so it is the clause dispatcher rather than error objects. |
+| **Numerics** | 3 | `4.0` where the 2024 suite expects `4`. |
 
 ## Install
 
