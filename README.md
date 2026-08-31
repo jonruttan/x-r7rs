@@ -63,6 +63,27 @@ PREFIX=$HOME/.local make install  # or a particular prefix
 
 `make uninstall` removes it either way.
 
+**One trap, and it is the one you will hit.** `x` decides where to look for
+langs from the directory you run it *in*. Inside an **x-lang checkout** it
+searches `deps/langs/` and an installed lang is invisible, however correctly it
+was installed:
+
+```
+$ cd path/to/x-lang && x -l r7rs
+Error: no library, app or lang named 'r7rs'
+  searched lib/r7rs.x, apps/r7rs/run.x
+      and deps/langs/*/lang.xon
+```
+
+Run it from anywhere else, or name the bundles explicitly — `X_LANG_DIR` wins
+in both modes:
+
+```bash
+X_LANG_DIR=$HOME/.local/share/x/langs/ x -l r7rs   # the installed one
+X_LANG_DIR=/path/to/x-r7rs/.. x -l r7rs            # a checkout, uninstalled
+```
+
+
 ## Pin it instead, for a project
 
 An install is unversioned and machine-wide. When it matters *which* version a
@@ -71,8 +92,8 @@ digest before unpacking. In the project's `lang.pin.xon`:
 
 ```x
 (lang "r7rs")
-(release "v0.1.0")
-(bundle "sha256:…" "https://github.com/jonruttan/x-r7rs/releases/download/v0.1.0/x-r7rs-v0.1.0.tar.gz")
+(release "v0.1.3")
+(bundle "sha256:…" "https://github.com/jonruttan/x-r7rs/releases/download/v0.1.3/x-r7rs-v0.1.3.tar.gz")
 (source "https://github.com/jonruttan/x-r7rs.git")
 ```
 
@@ -113,10 +134,40 @@ Working on both at once, `--allow-lang-skew` is the way through.
 ## Running it
 
 ```bash
-make test     # the spec suite -- every failure is loud
-make check    # the suite against known-failures.txt -- what CI gates on
-make bundle   # roll a release tarball and print its pin
+x -l r7rs                  # interactive
+x -l r7rs -f program.scm   # batch
 ```
+
+x-lang boots the dialect `lang.xon` declares, resolves and arms x-r5rs's root,
+then this bundle's own on top of it — which is why nothing here needs to know a
+path.
+
+## Development
+
+```bash
+X=/path/to/x-lang/x.sh make test    # the spec suite -- every failure is loud
+X=/path/to/x-lang/x.sh make check   # the suite against known-failures.txt -- what CI gates on
+make check-release-refs             # the declared versions are named in one place
+make bundle                         # roll a release tarball and print its pin
+```
+
+**Pass `X` explicitly.** Without it the suite takes the `x` on your PATH, and an
+installed x that trails the checkout reports failures the platform has already
+fixed.
+
+**Do not `make install` into an x-lang checkout.** The Makefile asks
+`$(X) --share-dir` where to put the bundle, and a checkout answers with its own
+root — so the files land in `<checkout>/langs/NAME`, which is not one of the
+three paths `-l` searches there. It reports success and the lang stays
+invisible. Install into a real `<share>` tree, or use `X_LANG_DIR`.
+
+
+**And this bundle needs an x-r5rs it can resolve.** A checkout of x-r5rs does
+not satisfy the row — only an install or an unpacked release tarball carries
+the stamped `version` file the comparison reads. That stamp is `git describe`,
+so installing x-r5rs from a checkout that is not exactly on its tag produces
+something like `v0.2.2-1-gabc1234-dirty`, which is not `v0.2.2` and is refused
+by name. `--allow-lang-skew` is the way through while working on both at once.
 
 CI runs the declared release *and* x-lang `main`, so a platform that moves
 underneath this bundle shows up as a red build rather than a surprise later.
