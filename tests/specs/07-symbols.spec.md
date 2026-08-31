@@ -1,3 +1,5 @@
+# @weight 4
+
 ## symbol?
 
 ### symbol? on symbol

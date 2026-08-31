@@ -1,3 +1,5 @@
+# @weight 4
+
 ## promise basics
 
 ### delay creates promise

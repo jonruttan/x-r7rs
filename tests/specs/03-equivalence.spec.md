@@ -1,3 +1,5 @@
+# @weight 4
+
 ## eqv?
 
 ### eqv? same boolean true

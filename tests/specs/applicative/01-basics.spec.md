@@ -1,3 +1,5 @@
+# @weight 6
+
 ## TCO stress
 
 ### do loop 50000 iterations

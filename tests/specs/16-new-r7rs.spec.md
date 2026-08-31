@@ -1,3 +1,5 @@
+# @weight 4
+
 ## digit-value
 
 ### digit-value of 0

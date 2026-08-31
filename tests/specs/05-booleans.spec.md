@@ -1,3 +1,5 @@
+# @weight 4
+
 ## boolean?
 
 ### boolean? on true

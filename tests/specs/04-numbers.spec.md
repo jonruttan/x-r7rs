@@ -1,3 +1,5 @@
+# @weight 4
+
 ## number predicates
 
 ### number? on integer
