@@ -16,7 +16,8 @@ $ x -l r7rs
 "hi"
 ```
 
-x-r7rs is a **lang**: a surface language loaded over an x-lang dialect. Where
+x-r7rs is a **lang**: a surface language loaded over an
+[x-lang](https://github.com/jonruttan/x-lang) dialect. Where
 x-lang and Scheme spell something the same way, Scheme is free to mean
 something different by it. The terms are in x-lang's
 [lang contract](https://github.com/jonruttan/x-lang/blob/main/docs/lang-contract.md).
@@ -190,6 +191,21 @@ tests/specs/        the suite, as literate markdown
 tests/contract/     the recorded debt CI gates on
 docs/               the R7RS reports, and notes from the port
 ```
+
+## Background
+
+R7RS is Scheme's answer to its own schism: R6RS (2007) grew the language
+enough that part of the community declined to follow, so the successor was
+chartered as two languages. R7RS-small — ratified 2013, edited by Alex Shinn,
+John Cowan and Arthur Gleckler — returns to R5RS's size and spirit while
+fixing what experience had settled: records, exceptions and `guard`,
+bytevectors, string ports, parameters, `cond-expand`, and a library system.
+That delta is exactly what this bundle is: R5RS plus about 700 lines. The
+large edition remains a work in progress.
+
+- [R7RS-small](https://small.r7rs.org/) — the report
+- [srfi.schemers.org](https://srfi.schemers.org/) — the SRFI library, where Scheme features incubate
+- [standards.scheme.org](https://standards.scheme.org/) — every report, R1RS through R7RS
 
 ## Licence
 
