@@ -1,5 +1,7 @@
 # x-r7rs — R7RS Scheme on x-lang
 
+<p align="center"><img src="docs/bitwise-banner.svg" alt="x-r7rs, with Bitwise the owl" width="100%"></p>
+
 R7RS-small as a thin layer over
 [x-r5rs](https://github.com/jonruttan/x-r5rs): `case-lambda`, records,
 parameters, promises, `cond-expand`, string ports, and the R7RS additions to
@@ -210,3 +212,5 @@ large edition remains a work in progress.
 ## Licence
 
 MIT No Attribution (MIT-0). See [LICENSE](LICENSE).
+
+<p align="center"><img src="docs/bitwise-mark.svg" alt="Bitwise" width="96"></p>
