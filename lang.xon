@@ -87,6 +87,6 @@
 ; stamp, only an install or an unpacked release tarball does.  That is the
 ; intended reading, and --allow-lang-skew is the way through while working on
 ; both at once.
-(requires-lang "r5rs" "v0.2.2")
+(requires-lang "r5rs" "v0.2.3")
 
 (entry "run.x")
