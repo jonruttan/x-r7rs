@@ -80,6 +80,13 @@ SPEC_PATH="${SPEC_PATH:-$BUNDLE/tests/specs}"
 # one file per process either way, so the boot is the only difference -- and
 # it is the FIRST thing to try against a failure that reproduces nowhere
 # else, because a stale or wrong image is invisible in a diff.
+#
+#  RAISE TIMEOUT_UNIT_SECS ON BOTH LEGS WHEN COMPARING THEM, or a loaded box
+# decides the answer.  The boot the image removes is ~20s of a 60s per-file
+# budget, so the SOURCE leg is the one that runs out: 02-derived timed out on
+# a busy machine and reported 49 cases as `died mid-batch`, making the image
+# look 49 BETTER than source when nothing differed.  The legs are only
+# comparable when neither can be stopped by the clock.
 if [ "${IMG:-1}" = 0 ]; then
 	SPEC_BATCH="${SPEC_BATCH:-1}"; export SPEC_BATCH
 else
@@ -104,20 +111,26 @@ else
 		echo "x-r7rs: platform images the JIT trampoline addresses (pre-41b93185) -- the suite boots from source" >&2
 		_builder=""
 	fi
-	#  A PLATFORM WHOSE RECACHE WALK IS AN `do` CANNOT RUN A HOOK IN THIS
-	# BUNDLE, and the failure is a WRONG ANSWER, not a crash.  boot/reflect.x's
-	# %image-recache! runs AFTER the install, so it runs in the imaged lang's
-	# environment -- and r5rs re-means `do` as R5RS iteration, told apart from
-	# sequencing by shape.  Calling a hook fetched from the list, ((first l)),
-	# is a first argument whose every element is a pair, so the walk read it as
-	# a binding list, bound `first`, tested `self`, and called NO HOOK AT ALL:
-	# every transient stayed nil, float.x's libm handle among them, and this
-	# suite went from 27 failures to 220 (126 of them `ffi-call s0->d: nil`)
-	# while the image itself was perfectly valid.  A platform whose walk still
-	# spells it `do` boots from source.
+	#  A PLATFORM WHOSE RECACHE WALK IS SHAPED LIKE R5RS ITERATION CANNOT RUN A
+	# HOOK IN THIS BUNDLE, and the failure is a WRONG ANSWER, not a crash.
+	# boot/reflect.x's %image-recache! runs AFTER the install, so it runs in the
+	# imaged lang's environment -- and r5rs re-means `do` as R5RS iteration, told
+	# apart from sequencing by shape.  Spelled (do ((first l)) (self (rest l))),
+	# the walk's first operand is a list holding one pair, which IS a binding list
+	# by that rule: it visited every hook and called none, in silence.  Every
+	# transient stayed nil, float.x's libm handle among them, and this suite went
+	# from 27 failures to 220 (126 of them `ffi-call s0->d: nil`) with an image
+	# that was itself perfectly valid.  x-lang 5544a80c respells the walk to
+	# recurse first; a platform without that boots from source.
+	#
+	#  COMMENTS ARE STRIPPED BEFORE THE MATCH, and that is not fussiness: the fix
+	# QUOTES THE BROKEN SPELLING in the note it leaves behind, so a plain grep
+	# answers "broken" on the very platform that carries the fix -- measured, and
+	# it silently cost the whole feature on a correct tree.  A probe for a
+	# spelling has to read only the code.
 	_rfl="$X_ROOT/lib/x/boot/reflect.x"
-	if [ -f "$_rfl" ] && grep -q 'do ((first l))' "$_rfl"; then
-		echo "x-r7rs: platform's %image-recache! walk is an r5rs-shadowed \`do\` -- no hook would run; the suite boots from source" >&2
+	if [ -f "$_rfl" ] && sed 's/;.*//' "$_rfl" | grep -q 'do ((first l))'; then
+		echo "x-r7rs: platform's %image-recache! walk is shaped like R5RS iteration (pre-5544a80c) -- no hook would run; the suite boots from source" >&2
 		_builder=""
 	fi
 	if [ -n "$_builder" ]; then
