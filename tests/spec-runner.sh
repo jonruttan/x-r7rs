@@ -84,6 +84,13 @@ if [ "${IMG:-1}" = 0 ]; then
 	SPEC_BATCH="${SPEC_BATCH:-1}"; export SPEC_BATCH
 else
 	_builder="$X_ROOT/tools/dev/image-build.sh"
+	#  ABSENT IS ITS OWN ANSWER, and said once.  Each gate below empties
+	# _builder after saying WHY, so "not there" has to be decided here or the
+	# fallback prints a second line blaming a file that is present.
+	if [ ! -f "$_builder" ]; then
+		echo "x-r7rs: no image writer at $_builder -- the suite boots from source" >&2
+		_builder=""
+	fi
 	# A PLATFORM THAT IMAGES ITS JIT TRAMPOLINES CANNOT CARRY AN IMAGE THAT
 	# COMPILES, and the failure is a SIGSEGV rather than a wrong answer:
 	# tool/asm-compile.x held those addresses as plain integers from dlsym, so
@@ -97,7 +104,23 @@ else
 		echo "x-r7rs: platform images the JIT trampoline addresses (pre-41b93185) -- the suite boots from source" >&2
 		_builder=""
 	fi
-	if [ -f "$_builder" ]; then
+	#  A PLATFORM WHOSE RECACHE WALK IS AN `do` CANNOT RUN A HOOK IN THIS
+	# BUNDLE, and the failure is a WRONG ANSWER, not a crash.  boot/reflect.x's
+	# %image-recache! runs AFTER the install, so it runs in the imaged lang's
+	# environment -- and r5rs re-means `do` as R5RS iteration, told apart from
+	# sequencing by shape.  Calling a hook fetched from the list, ((first l)),
+	# is a first argument whose every element is a pair, so the walk read it as
+	# a binding list, bound `first`, tested `self`, and called NO HOOK AT ALL:
+	# every transient stayed nil, float.x's libm handle among them, and this
+	# suite went from 27 failures to 220 (126 of them `ffi-call s0->d: nil`)
+	# while the image itself was perfectly valid.  A platform whose walk still
+	# spells it `do` boots from source.
+	_rfl="$X_ROOT/lib/x/boot/reflect.x"
+	if [ -f "$_rfl" ] && grep -q 'do ((first l))' "$_rfl"; then
+		echo "x-r7rs: platform's %image-recache! walk is an r5rs-shadowed \`do\` -- no hook would run; the suite boots from source" >&2
+		_builder=""
+	fi
+	if [ -n "$_builder" ]; then
 		# The trees the harness armed, in the order it armed them.
 		_keys=$(sed -n 's/^(import-path! "\(.*\)")$/\1/p' "$LANG_LIB")
 		if X_BIN="$X_BIN" sh "$_builder" "$LANG_LIB" "$BUNDLE/tests/lib/.images" $_keys; then
@@ -105,8 +128,6 @@ else
 		else
 			echo "x-r7rs: no state image (image-build exit $?) -- the suite boots from source" >&2
 		fi
-	else
-		echo "x-r7rs: no image writer at $X_ROOT/tools/dev/image-build.sh -- the suite boots from source" >&2
 	fi
 fi
 
