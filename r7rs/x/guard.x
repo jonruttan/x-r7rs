@@ -91,17 +91,42 @@
 ; on one without.  See x-lang#527.
 (if (null? (prim-ref (lit base) (lit def-global)))
   ()
-(define
-  guard
-  (op (clause . body)
-    env
-    (eval
-      (cons (lit %c-guard)
-        (cons
-          (if (%r7rs-guard-clauses? (cdr clause))
-            ; R7RS: the handler is a cond over the clauses.
-            (list (car clause) (cons (lit cond) (cdr clause)))
-            ; x: the handler forms are already the handler.
-            clause)
-          body))
-      env))))
+  (begin
+    ; NAMED, then installed.  The op is a global of its own so that the state
+    ; image table in r7rs/base.x has something to put BACK: its restore thunk
+    ; hands `guard` to the platform primitive for the write -- the only form in
+    ; which the image can name it -- and its reshadow thunk hands it to this.
+    (define
+      %r7rs-guard
+      (op (clause . body)
+        env
+        (eval
+          (cons (lit %c-guard)
+            (cons
+              (if (%r7rs-guard-clauses? (cdr clause))
+                ; R7RS: the handler is a cond over the clauses.
+                (list (car clause) (cons (lit cond) (cdr clause)))
+                ; x: the handler forms are already the handler.
+                clause)
+              body))
+          env)))
+    (define guard %r7rs-guard)
+    ; REGISTERED HERE, inside the same branch that installed it: an engine that
+    ; does not take the shadow must not take the hook either.
+    ;
+    ;  AND THROUGH %def-global, NOT set!.  `guard` is bound TWICE -- bare by C
+    ; in the base spine, and here in the global tree -- and from inside a frame
+    ; set! answers ok while a later read still sees the old value: measured, the
+    ; image came back `unnameable: 2` with the restore thunk running and doing
+    ; nothing.  At top level the same set! works, which is what makes it a trap.
+    ; %def-global takes def's top-level path unconditionally (r5rs/aliases.x),
+    ; and is the door `define` itself uses.
+    ;  %c-guard is NILLED FOR THE WRITE and re-captured on load, the same way and
+    ; for the same reason as %c-error (scm/error.scm): the primitive travels
+    ; under its OWN name, which the loader restores, and no imaged reference to
+    ; it is left for the writer to name.
+    (%r7rs-shadow!
+      (lambda () (begin (%def-global (lit guard) %c-guard)
+                        (%def-global (lit %c-guard) ())))
+      (lambda () (begin (%def-global (lit %c-guard) guard)
+                        (%def-global (lit guard) %r7rs-guard))))))
