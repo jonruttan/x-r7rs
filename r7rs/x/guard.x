@@ -123,8 +123,10 @@
     ; and is the door `define` itself uses.
     ;  %c-guard is NILLED FOR THE WRITE and re-captured on load, the same way and
     ; for the same reason as %c-error (scm/error.scm): the primitive travels
-    ; under its OWN name, which the loader restores, and no imaged reference to
-    ; it is left for the writer to name.
+    ; under its OWN name, which the loader restores, so no reference to a bare C
+    ; primitive has to survive the image.  That is the reason on its own; the
+    ; writer defect the note there used to cite does not reproduce on current
+    ; x-lang, and scm/error.scm says so rather than leaving the claim standing.
     (%r7rs-shadow!
       (lambda () (begin (%def-global (lit guard) %c-guard)
                         (%def-global (lit %c-guard) ())))

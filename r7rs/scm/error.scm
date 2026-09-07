@@ -14,12 +14,19 @@
 (define error %r7rs-error)
 ; Through %def-global, not set!: see the note in x/guard.x -- a name bound both
 ; bare by C and in the global tree does not take a set! from inside a frame.
-;  AND %c-error IS NILLED FOR THE WRITE, not carried.  Measured: an image that
-; carries this reference brings it back as "" -- the writer names an off-chain
-; primitive found at a type-struct row as a TYPE-STATIC and resolves it to that
-; row in the loading base, which for %c-error is a string.  The SAME primitive
-; reached through its own global comes back as #<prim>, so the restored name is
-; the door, and the hook re-captures through it.
+;  AND %c-error IS NILLED FOR THE WRITE, not carried, so that NO reference to a
+; bare C primitive has to survive the image at all -- only the name does, and
+; the loader restores that against its own base.  It is float.x's transient
+; discipline, and it is the reason rather than the history below.
+;   THE HISTORY, because the comment that stood here overstated it.  On x-lang
+; cc8c53c0 an image that carried this reference brought it back as "" while the
+; same primitive reached through its own global came back as #<prim>, and the
+; note here called that a writer defect in the type-static naming.  It does NOT
+; reproduce on f0ff111c: carrying the reference round-trips fine, checked both
+; by this bundle and by a bare capture in a lib of its own.  So do not go
+; hunting that defect on a current platform -- either it was fixed among
+; #641-#643 or it needed the in-flight writer that tree was carrying.  What is
+; kept is the weaker dependency, not the diagnosis.
 (%r7rs-shadow!
   (lambda () (begin (%def-global (lit error) %c-error)
                     (%def-global (lit %c-error) ())))
