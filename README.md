@@ -72,6 +72,18 @@ PREFIX=$HOME/.local make install  # or a particular prefix
 
 `make uninstall` removes it either way.
 
+**Installing writes a boot image.** `make install` ends with
+`x --image -l r7rs`, which saves the booted language to `.images/` beside the
+bundle; `x -l r7rs` loads that instead of re-reading the sources, for as long
+as the image's key still matches the library, the engine and this bundle.
+Measured here: **1.6s against 14.4s** to boot and run a small program, with
+identical output. The two primitives this bundle shadows, `guard` and `error`,
+are handed back to their C originals after a load — the same machinery the
+spec harness uses, since it is the same heap. A platform with no image writer
+fails that line harmlessly and the lang boots from source, so nothing about
+installing depends on it; `x --no-image -l r7rs` boots from source on any
+platform.
+
 **One trap, and it is the one you will hit.** `x` decides where to look for
 langs from the directory you run it *in*. Inside an **x-lang checkout** it
 searches `deps/langs/` and an installed lang is invisible, however correctly it
