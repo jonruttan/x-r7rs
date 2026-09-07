@@ -47,6 +47,8 @@ install: ## Install into <share>/langs/r7rs
 	cp -R $(PAYLOAD) "$(DEST)/"
 	printf '%s\n' '$(LANG_VERSION)' > "$(DEST)/version"
 	@echo "x-r7rs: installed to $(DEST)"
+	@echo "x-r7rs: writing the boot image"
+	"$(X)" --image -l r7rs || true
 	@echo "x-r7rs: try  x -l r7rs"
 
 .PHONY: uninstall

@@ -1,1 +1,7 @@
 tests/lib/
+
+# The boot image: `x --image -l r7rs` (the install above) writes it beside the
+# bundle, and `x -l r7rs` boots from it while its key still matches.  A
+# platform without an image writer fails that line harmlessly and the lang
+# boots from source, which is why the install does not depend on it.
+.images/
