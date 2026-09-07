@@ -58,4 +58,77 @@ LANG_LIB="$BUNDLE/tests/lib/harness.gen.x"
 # while diagnosing, without moving anything into the suite.
 SPEC_PATH="${SPEC_PATH:-$BUNDLE/tests/specs}"
 
+# THE SUITE BOOTS FROM A STATE IMAGE OF THE HARNESS, when the platform can
+# write one -- and for a bundle this size the BOOT is what the suite costs.
+# Every spec file is its own process, and each one reads the tower and this
+# lang from source before its first case; x-python measured the same shape at
+# 26 seconds of boot in a 38-second file, two thirds of its wall clock
+# (x-python#43, which is where this block comes from -- x-awk has run this way
+# since 2026-09-06).
+#
+# tools/dev/image-build.sh images a child base that loaded the harness and
+# keys the image on what it depends on: the harness, the platform's lib/, its
+# engine, and every tree the harness armed -- read back off the generated
+# harness itself (its `import-path!` lines are this bundle and, for a lang
+# built on another, the lang beneath it), so a change to EITHER rewrites the
+# image rather than leaving a stale one that still answers.
+#
+# The writer lives in a CHECKOUT only; an installed tree, and any release
+# older than the image tools, boots from source and says so -- which is what
+# the pinned leg does until this bundle's (requires-release ...) names a
+# release carrying them.  IMG=0 is the control: the same suite from source,
+# one file per process either way, so the boot is the only difference -- and
+# it is the FIRST thing to try against a failure that reproduces nowhere
+# else, because a stale or wrong image is invisible in a diff.
+if [ "${IMG:-1}" = 0 ]; then
+	SPEC_BATCH="${SPEC_BATCH:-1}"; export SPEC_BATCH
+else
+	_builder="$X_ROOT/tools/dev/image-build.sh"
+	#  ABSENT IS ITS OWN ANSWER, and said once.  Each gate below empties
+	# _builder after saying WHY, so "not there" has to be decided here or the
+	# fallback prints a second line blaming a file that is present.
+	if [ ! -f "$_builder" ]; then
+		echo "x-r7rs: no image writer at $_builder -- the suite boots from source" >&2
+		_builder=""
+	fi
+	# A PLATFORM THAT IMAGES ITS JIT TRAMPOLINES CANNOT CARRY AN IMAGE THAT
+	# COMPILES, and the failure is a SIGSEGV rather than a wrong answer:
+	# tool/asm-compile.x held those addresses as plain integers from dlsym, so
+	# an image carries the WRITER process's addresses and a compile on the far
+	# side of a load jumps into them (x-python#43 saw exit 139 on the analyser
+	# swap).  x-lang 41b93185 made them transients the recache hook remakes;
+	# the probe is for the FIX and not for a version, so a platform that has
+	# it is used and one that has not boots from source.
+	_asm="$X_ROOT/lib/x/tool/asm-compile.x"
+	if [ -f "$_asm" ] && ! grep -q "image-transients" "$_asm"; then
+		echo "x-r7rs: platform images the JIT trampoline addresses (pre-41b93185) -- the suite boots from source" >&2
+		_builder=""
+	fi
+	#  A PLATFORM WHOSE RECACHE WALK IS AN `do` CANNOT RUN A HOOK IN THIS
+	# BUNDLE, and the failure is a WRONG ANSWER, not a crash.  boot/reflect.x's
+	# %image-recache! runs AFTER the install, so it runs in the imaged lang's
+	# environment -- and r5rs re-means `do` as R5RS iteration, told apart from
+	# sequencing by shape.  Calling a hook fetched from the list, ((first l)),
+	# is a first argument whose every element is a pair, so the walk read it as
+	# a binding list, bound `first`, tested `self`, and called NO HOOK AT ALL:
+	# every transient stayed nil, float.x's libm handle among them, and this
+	# suite went from 27 failures to 220 (126 of them `ffi-call s0->d: nil`)
+	# while the image itself was perfectly valid.  A platform whose walk still
+	# spells it `do` boots from source.
+	_rfl="$X_ROOT/lib/x/boot/reflect.x"
+	if [ -f "$_rfl" ] && grep -q 'do ((first l))' "$_rfl"; then
+		echo "x-r7rs: platform's %image-recache! walk is an r5rs-shadowed \`do\` -- no hook would run; the suite boots from source" >&2
+		_builder=""
+	fi
+	if [ -n "$_builder" ]; then
+		# The trees the harness armed, in the order it armed them.
+		_keys=$(sed -n 's/^(import-path! "\(.*\)")$/\1/p' "$LANG_LIB")
+		if X_BIN="$X_BIN" sh "$_builder" "$LANG_LIB" "$BUNDLE/tests/lib/.images" $_keys; then
+			X_IMG_DIR="$BUNDLE/tests/lib/.images"; export X_IMG_DIR
+		else
+			echo "x-r7rs: no state image (image-build exit $?) -- the suite boots from source" >&2
+		fi
+	fi
+fi
+
 . "$X_ROOT/tests/spec-runner.sh"
