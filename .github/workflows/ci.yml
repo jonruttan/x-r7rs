@@ -140,6 +140,47 @@ jobs:
         run: |
           X="$PWD/.x-lang/x.sh" R5RS_ROOT="$PWD/.x-r5rs" sh tests/spec-gate.sh
 
+  if-ladders:
+    # `match` IS THE PRIMITIVE, and a decision with four or more arms written
+    # as nested ifs says the same thing one indent deeper per arm.  The check
+    # is a RATCHET over tools/contract/if-ladders.txt: the debt it was born
+    # with may only shrink, and a new ladder fails here rather than in review.
+    #
+    # THE MANIFEST IS EMPTY, and this job is what keeps it that way.  It cost
+    # nothing to arm -- the bundle's 31 three-armed `if`s are chains of one
+    # link, bar two of two, because this is a thin layer over x-r5rs and the
+    # decisions with arms live in r7rs/scm/*.scm where `cond` is already flat
+    # -- so the emptiness is a rule from the first commit rather than a target.
+    #
+    # NO x-r5rs HERE, unlike the specs job.  The checker PARSES the modules
+    # and never evaluates them, so nothing this bundle is written on top of has
+    # to be present; it needs a reader, not a runtime.
+    #
+    # x-lang MAIN, not the declared release, and deliberately unlike every
+    # other job here.  This one asks a question about THIS REPOSITORY's source
+    # shape; the platform is a parser it borrows, not a thing under test, and
+    # the checker is tooling rather than payload -- `make install` does not
+    # ship it.  Pinning it would mean a release bump could break the linter,
+    # which is a worse trade than the one main asks for.
+    name: if ladders are match
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check out x-lang
+        uses: actions/checkout@v4
+        with:
+          repository: jonruttan/x-lang
+          ref: main
+          path: .x-lang
+      - name: Build the platform
+        working-directory: .x-lang
+        run: |
+          make engine
+          make
+          make boot
+      - name: No new if ladders
+        run: X="$PWD/.x-lang/x.sh" sh tools/check/if-ladders.sh
+
   relocatable:
     # THE RULE THAT ACTUALLY KILLED THE LAST GENERATION, as a gate -- and it
     # is stricter now than the contract requires.  The contract exempts an app

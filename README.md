@@ -169,6 +169,7 @@ path.
 X=/path/to/x-lang/x.sh make test    # the spec suite -- every failure is loud
 X=/path/to/x-lang/x.sh make check   # the suite against known-failures.txt -- what CI gates on
 make check-release-refs             # the declared versions are named in one place
+X=/path/to/x-lang/x.sh make check-if-ladders   # no new nested-if ladders
 make bundle                         # roll a release tarball and print its pin
 ```
 
@@ -193,6 +194,21 @@ by name. `--allow-lang-skew` is the way through while working on both at once.
 CI runs the declared release *and* x-lang `main`, so a platform that moves
 underneath this bundle shows up as a red build rather than a surprise later.
 
+`make check-if-ladders` is the other gate, and it needs an `X`: the checker is
+itself x, because a nested-`if` ladder is a *shape* and only reading the module
+as s-expressions can see one — a grep would count parens. `match` is an engine
+primitive and the flat way to write a decision with more than a couple of arms;
+a chain of `if`s nested through their else branches says the same thing one
+indent deeper per arm. Four arms is the threshold, and
+`tools/contract/if-ladders.txt` is **empty**: the 31 three-armed `if`s across
+the ten modules are chains of one link, bar two of two in `r7rs/x/guard.x`,
+because this bundle is a thin layer over x-r5rs and the decisions with arms
+live in `r7rs/scm/*.scm` where `cond` is already flat. The check is a ratchet
+in both directions — a new ladder is red, and so is a manifest row that has
+been outgrown but not lowered, so a fix cannot leave the file behind as a
+record of things that are fine. It needs no x-r5rs: the checker parses the
+modules and never evaluates them.
+
 ## Layout
 
 ```
@@ -203,6 +219,9 @@ r7rs/scm/*.scm      the language, in Scheme
 r7rs/x/*.x          the parts that need x itself
 tests/specs/        the suite, as literate markdown
 tests/contract/     the recorded debt CI gates on
+tools/check/        the gates: release-refs from x-lang's lang kit, and the
+                    if-ladder linter, which is x because a ladder is a shape
+tools/contract/     the recorded if-ladder debt -- empty, and saying so
 docs/               the R7RS reports, and notes from the port
 ```
 
