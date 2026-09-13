@@ -6,19 +6,14 @@
 ; @copyright 2026 Jon Ruttan
 ; @license MIT No Attribution (MIT-0)
 ;
-; R7RS IS R5RS PLUS, and this file is only the plus.  run.x arms the x-r5rs
+; R7RS is R5RS plus, and this file is only the plus. run.x arms the x-r5rs
 ; bundle's root and imports r5rs/base before this loads, so everything under
-; ./scm/ here can be written as if the R5RS library were the standard library
-; -- which, for R7RS, it is.
+; ./scm/ can be written as if the R5RS library were the standard library --
+; which, for R7RS, it is. The dependency is declared by (requires-lang "r5rs")
+; in lang.xon.
 ;
-; That dependency is the first of its kind among these bundles, and the
-; contract has no vocabulary for it: personality.xon carries name, dialect,
-; release and entry, and nothing says "and it needs x-r5rs at some version".
-; The probe lives in run.x, which is the one file allowed to know where things
-; are; x-lang#526 asks for the manifest row that would replace it.
-;
-; No path literals and no dialect boot here: run.x owns both.  Siblings are
-; reached by ./-relative include-once, which resolves against THIS file.
+; No path literals and no dialect boot here: run.x owns both. Siblings are
+; reached by ./-relative include-once, which resolves against this file.
 
 (import r7rs/printer)
 
@@ -35,40 +30,23 @@
 
 ; --- What this bundle shadows, and the state image ---------------------------
 ;
-; `guard` and `error` are C CONTROL-FLOW SYNTAX BOUND BARE -- (guard spine)
-; and (error spine) in the engine's ISA contract (engine/tools/contract/isa.x),
-; "bound bare by C, no catalog entry".  A state image can therefore name such a
-; primitive ONE way only: under the global the engine bound it to.  The writer
-; looks each %isa-bare name up in the base it is imaging and takes the value's
-; function pointer (tools/dev/image-name.x), and that file already states the
-; failure -- "a name the library has rebound yields the wrapper, not the
-; primitive, and is simply not added".
+; `guard` and `error` are C control-flow syntax bound bare -- (guard spine) and
+; (error spine) in the engine's ISA contract, with no catalog entry. A state
+; image can name such a primitive only one way: under the global the engine
+; bound it to. This bundle rebinds both (keeping the originals in %c-guard,
+; x/guard.x, and %c-error, scm/error.scm), so the writer could name neither
+; address and would refuse the image.
 ;
-; This bundle rebinds BOTH, keeping the originals in %c-guard (x/guard.x) and
-; %c-error (scm/error.scm).  So the writer could name neither address and
-; refused the spec harness outright:
+; So the shadow is put down before the write and picked up after the load --
+; the transient shape tower-compiled.x uses, not float.x's nil-and-re-derive:
+; once a bare primitive's name is taken there is no other door to re-derive it
+; from, so the image has to carry the primitive under its own name. A transient
+; thunk in the writer's child puts the platform binding back before the walk,
+; making the address nameable; the loader resolves that name against its own
+; base, and a recache hook puts the shadow back once the load is done.
 ;
-;   objects: 144820  externals: 249  roots: 19  unnameable: 2
-;     ("PRIMITIVE" 'foreign-unnamed 4378148428)   ; %c-guard
-;     ("PRIMITIVE" 'foreign-unnamed 4378149528)   ; %c-error
-;
-; THE SHADOW IS PUT DOWN BEFORE THE WRITE AND PICKED UP AFTER THE LOAD.  That
-; is the SECOND of docs/state-images.md's two transient shapes -- the one
-; tower-compiled.x uses for its compiled analysers -- and not float.x's
-; nil-and-re-derive, for a reason particular to bare syntax: once its name is
-; taken there is NO other door to the primitive, so a hook that ran after the
-; load would have nothing to re-derive it FROM.  The image has to carry the
-; primitive itself, under its own name.
-;
-; The transient thunk runs in the writer's child before the walk and puts the
-; platform binding back, which makes the address nameable again; it costs the
-; image nothing, because the replacement stays reachable from the table below.
-; The loader resolves that name against its OWN base, before the install, so
-; the pointer it restores is this process's.  The recache hook then puts the
-; shadow back once the loader is done.
-;
-; Each shadow REGISTERS ITSELF on the line that installs it, so the table can
-; never disagree with what was actually rebound -- x/guard.x installs its one
+; Each shadow registers itself on the line that installs it, so the table
+; cannot disagree with what was rebound. x/guard.x installs its one
 ; conditionally, and an engine that does not get the shadow must not get the
 ; hook either.
 (def %r7rs-shadow-rows ())          ; ((restore . reshadow) ...), newest first
@@ -110,15 +88,11 @@
 (include-once "./x/records.x")
 (include-once "./x/params.x")
 (include-once "./x/cond-expand.x")
-; LOADED AGAIN, as of x-lang#527.  R7RS `guard` and x's `guard` are different
-; forms with the same name, so providing one means shadowing the other -- and
-; shadowing interposes a call frame between the runner's %seq and the body it
-; guards.  Every `define` inside a guarded body used to bind nowhere, silently,
-; because define bound by letting TCO pop the operative's frame.
-;
-; r5rs/aliases.x's define now goes through (base def-global), which takes the
-; global path whatever the frame depth, so the frame this file adds costs
-; nothing.
+; R7RS `guard` and x's `guard` are different forms with the same name, so
+; providing one shadows the other, which interposes a call frame between the
+; runner's %seq and the body it guards. r5rs/aliases.x's define goes through
+; (base def-global), which takes the global path whatever the frame depth, so
+; a `define` inside a guarded body still binds.
 (include-once "./x/guard.x")
 ; ./x/bytevector.x is NOT loaded -- see the note at the top of that file.
 

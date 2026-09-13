@@ -1,17 +1,9 @@
-; --- Ports (R7RS §6.13) ---
+; --- Ports (R7RS 6.13) ---
 ;
-; This file EXTENDS the R5RS port layer (x-r5rs, r5rs/scm/ports.scm), which
+; This file extends the R5RS port layer (x-r5rs, r5rs/scm/ports.scm), which
 ; provides the representation, the predicates, read-char, read and the file
-; procedures.  What R7RS adds on top is STRING ports, and they are built on
-; that layer's %strsrc source rather than on anything of their own.
-;
-; A REWRITE.  The 2024 version created a temp file per string port --
-; mkstemp/unlink/write/lseek through dlsym'd libc -- so that every port had a
-; real descriptor and read-char could stay fd-only.  It cost a filesystem
-; round trip per port, made the bundle need radon for dlopen, and left a temp
-; file behind on any error path between mkstemp and unlink.  The R5RS layer's
-; source slot is polymorphic now, so a string port is a string and a cursor
-; and nothing else.
+; procedures. What R7RS adds is string ports, built on that layer's %strsrc
+; source: a string port is a string and a cursor, nothing else.
 
 ; --- Port extensions (R7RS §6.13) ---
 
@@ -58,13 +50,11 @@
       (let ((r (thunk)))
         (do (set-car! %out-fd saved) r)))))
 
-; The platform's display is VARIADIC -- (display a "/" b) is how rational.x
-; renders 10/3, and complex.x does the same with "i".  So an extra argument
-; is already meaningful here, and R7RS's optional port cannot be told from it
-; by arity alone.  Dispatch on the VALUE: one extra argument that is a port
-; is R7RS's port argument; anything else is the platform's variadic display,
-; and is passed straight through.  Getting this wrong segfaults the engine --
-; %port-fd of a string hands a garbage descriptor to File write.
+; The platform's display is variadic -- (display a "/" b) is how rational.x
+; renders 10/3 -- so R7RS's optional port argument cannot be told from a
+; variadic operand by arity alone. Dispatch on the value: one extra argument
+; that is a port is R7RS's port argument; anything else is passed straight
+; through. Getting this wrong hands a garbage descriptor to File write.
 (define %base-display display)
 (define %base-write write)
 (define %base-write-char write-char)

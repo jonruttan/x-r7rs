@@ -1,14 +1,12 @@
-; lang.xon -- what this bundle IS.
+; lang.xon -- what this bundle is.
 ;
-; xon: read with the ordinary reader and never evaluated, like every other
-; manifest in the x-lang world (pin.xon, engine.pin.xon).  A form a reader
-; does not know is a loud error, never a skip -- a manifest that silently
-; ignores half of itself cannot be extended without wondering which readers
-; obeyed which half.
+; xon: read with the ordinary reader and never evaluated, like every manifest
+; in the x-lang world (pin.xon, engine.pin.xon). An unknown form is a loud
+; error, never a silent skip.
 ;
 ; FORMAT (one form per line):
 ;   (lang "NAME")               the -l name
-;   (dialect NAME)              he | xe | rn -- a REQUIREMENT, not a taste
+;   (dialect NAME)              he | xe | rn -- a requirement
 ;   (requires-release "TAG")    the x-lang this bundle was built against
 ;   (requires-lang "NAME" ["V"]) another lang this one is written on top
 ;                               of, optionally at an exact version
@@ -16,77 +14,34 @@
 
 (lang "r7rs")
 
-; XENON, for the same reason x-r5rs is: Scheme's numerics are the tower.  Not
-; radon, because the two modules that wanted dlopen -- x/bytevector.x and
-; scm/ports.scm -- are not loaded in this release.
+; Xenon: Scheme's numerics are the tower. Not radon, because the two modules
+; that wanted dlopen -- x/bytevector.x and scm/ports.scm -- are not loaded in
+; this release.
 (dialect xe)
 
-; PAIRING, NOT PINNING.  A digest freezes bytes; it says nothing about whether
-; those bytes still run against a platform that moved.  This row is the part
-; that is checkable, and it is compared for EQUALITY, never parsed.
-;
-; v0.6.0 was the first release carrying what this bundle needs: bundle
-; acquisition, `-l` loading, --share-dir answering from any cwd, and eval! in
-; the seam.  v0.7.0 is what these specs are green against, and this row tracks
-; THAT rather than the floor -- the question it answers is "what was this built
-; against", not "what is the oldest that would still work".
+; The x-lang release this bundle is built and tested against; CI compares it
+; for equality.
 
 (requires-release "v0.14.0")
 
-; R7RS IS R5RS PLUS about 700 lines, and this row is what says so.
+; R7RS is R5RS plus about 700 lines, and this row is what says so. x.sh
+; resolves it the way it resolves -l, arms the required lang's root before this
+; bundle's own (import-path! prepends, so a shared name still resolves to ours),
+; and refuses at startup naming what is missing and who asked.
 ;
-; x.sh resolves it the same way it resolves -l, arms the required lang's root
-; BEFORE this bundle's own (import-path! prepends, so ours still wins any name
-; we share), and refuses at startup naming what is missing and who asked for it.
+; The version is compared for equality, never parsed -- the same rule as
+; (requires-release ...) above -- so it names what this was built and tested
+; against, not a minimum, and every x-r5rs release obsoletes the row.
+; --allow-lang-skew is the way through while working on both at once.
 ;
-; Before the row existed the dependency lived as a probe in run.x: derive our
-; own root, look beside it for r5rs/ or x-r5rs/, and hope.  That made a missing
-; lang a runtime message rather than a refusal, recorded nothing about WHAT was
-; needed, and would have been re-derived by every dependent.  The same argument
-; (dialect ...) already makes -- a requirement belongs in the manifest.
+; What the version compares against is derived: `make install` and
+; tools/bundle.sh stamp a `version` file from git describe, so a checkout
+; (which carries no stamp) does not satisfy the row -- only an install or an
+; unpacked release tarball does.
 ;
-; A VERSION FOLLOWS THE NAME, and the row below carries one.  It is compared
-; for EQUALITY against the version the resolved lang reports -- never parsed,
-; exactly as (requires-release ...) above is.  Ordering and ranges would need a
-; version algebra, and with it a resolver; equality plus --allow-lang-skew is
-; smaller and says what it means.
-;
-; EQUALITY IS WHY THIS TRACKS THE PAIRING RATHER THAN THE FLOOR.  v0.2.0 is
-; where the capability landed -- the string ports here are built on that
-; release's polymorphic port source and sink, and against v0.1.0 this bundle
-; does not fail a spec, it fails to load.  But only the declared version
-; satisfies the row, so it names what this was built and tested against.
-; Nothing under r5rs/ has changed since v0.2.0; the releases since are the lang
-; kit and successive x-lang pairings, so the floor has not moved, only the
-; pairing.  Every x-r5rs release obsoletes this row -- the two move in lockstep,
-; which is the price of "compared for equality, never parsed".
-;
-; What it compares against is DERIVED, not declared: `make install` and
-; tools/bundle.sh both stamp a `version` file from git describe / the tag,
-; because a version row in the dependency's own lang.xon could only be true
-; at the one commit that gets tagged and would lie at every other.
-;
-; v0.1.0 was the first tagged x-r5rs, and naming it is what makes this row
-; checkable rather than decorative.  An untagged dependency could not be named
-; at all: git describe answers a bare hash there, so any version written here
-; would be one no install could ever match, and a constraint that fails for
-; everyone is worse than no constraint.
-;
-; v0.2.0 IS A FLOOR THIS BUNDLE CANNOT RUN BELOW, not a refresh.  The string
-; ports below are built on that release's %strsrc and %strsink -- the
-; polymorphic source and sink -- which v0.1.0 does not have.  Against v0.1.0
-; this bundle does not fail a spec, it fails to load.
-;
-; WHAT IT CATCHES is the r5rs seam moving under us -- the define mechanism,
-; syntax-rules hygiene, the numeric tower.  This bundle is R5RS plus about 700
-; lines and reaches into all three; before the row, an r5rs installed from a
-; later branch broke r7rs specs with no hint that the cause was next door.
-; Now it refuses at startup, naming both versions and who asked.
-;
-; A CHECKOUT OF R5RS NO LONGER SATISFIES THIS by default -- it carries no
-; stamp, only an install or an unpacked release tarball does.  That is the
-; intended reading, and --allow-lang-skew is the way through while working on
-; both at once.
+; v0.2.0 is a floor this bundle cannot run below: the string ports are built on
+; that release's polymorphic %strsrc/%strsink, which v0.1.0 lacks. Against
+; v0.1.0 this bundle fails to load, not a spec.
 (requires-lang "r5rs" "v0.2.3")
 
 (entry "run.x")

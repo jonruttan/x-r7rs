@@ -1,17 +1,12 @@
-; --- Records (R7RS §5.5) ---
+; --- Records (R7RS 5.5) ---
 ;
-; EVERY GENERATED PROCEDURE IS A `lambda`, NOT AN `fn`, and that is the whole
-; of the port.  The 2024 file emitted (fn (x) ...) for the predicate and each
-; accessor, and (fn <field-names> ...) for the constructor.  x's `fn` takes an
-; explicit receiver, so each of those bound its FIRST REAL PARAMETER to the
-; receiver and shifted the rest off the end -- the constructor built a record
-; from nothing and the accessors read a slot that was not there, which
-; segfaults rather than raising.
-;
-; r5rs/aliases.x's `lambda` is the operative that splices the receiver in, so
-; emitting `lambda` makes the generated code correct by construction and keeps
-; this file readable as Scheme.  Same reasoning, same fix, as every other
-; (fn (...)) in these bundles.
+; Every generated procedure is a `lambda`, not an `fn`. x's `fn` takes an
+; explicit receiver, so `fn`-shaped Scheme formals would bind the first real
+; parameter to the receiver and shift the rest off the end -- the constructor
+; would build a record from nothing and an accessor read a slot that is not
+; there. r5rs/aliases.x's `lambda` is the operative that splices the receiver
+; in, so emitting `lambda` makes the generated code correct by construction and
+; reads as Scheme.
 
 
 (define
