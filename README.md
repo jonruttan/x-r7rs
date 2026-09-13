@@ -32,11 +32,6 @@ name, if it is missing.
 
 **610 of 637 specs green** against x-lang **v0.14.0** and x-r5rs **v0.2.3**.
 
-Sixteen of the recorded failures went on v0.9.0 without a line changing under
-`r7rs/` — the whole error-object surface and every `guard` case but one. The
-contract shrank from 43 to 27 because the ratchet is red in *both* directions,
-so a fix cannot land unrecorded.
-
 The 27 that do not pass are recorded by name in
 [`tests/contract/known-failures.txt`](tests/contract/known-failures.txt), and
 CI gates on that list rather than on a count — red when a new failure appears
@@ -84,10 +79,9 @@ fails that line harmlessly and the lang boots from source, so nothing about
 installing depends on it; `x --no-image -l r7rs` boots from source on any
 platform.
 
-**One trap, and it is the one you will hit.** `x` decides where to look for
-langs from the directory you run it *in*. Inside an **x-lang checkout** it
-searches `deps/langs/` and an installed lang is invisible, however correctly it
-was installed:
+`x` resolves langs relative to the directory it runs in. Inside an x-lang
+checkout it searches `deps/langs/` only, so an installed lang is not found
+there:
 
 ```
 $ cd path/to/x-lang && x -l r7rs
@@ -96,8 +90,8 @@ Error: no library, app or lang named 'r7rs'
       and deps/langs/*/lang.xon
 ```
 
-Run it from anywhere else, or name the bundles explicitly — `X_LANG_DIR` wins
-in both modes:
+Run `x` from another directory, or set `X_LANG_DIR`, which takes precedence in
+both cases:
 
 ```bash
 X_LANG_DIR=$HOME/.local/share/x/langs/ x -l r7rs   # the installed one
@@ -160,8 +154,7 @@ x -l r7rs -f program.scm   # batch
 ```
 
 x-lang boots the dialect `lang.xon` declares, resolves and arms x-r5rs's root,
-then this bundle's own on top of it — which is why nothing here needs to know a
-path.
+then this bundle's own on top of it.
 
 ## Development
 
@@ -222,7 +215,7 @@ tests/contract/     the recorded debt CI gates on
 tools/check/        the gates: release-refs from x-lang's lang kit, and the
                     if-ladder linter, which is x because a ladder is a shape
 tools/contract/     the recorded if-ladder debt -- empty, and saying so
-docs/               the R7RS reports, and notes from the port
+docs/               the R7RS reports
 ```
 
 ## Background

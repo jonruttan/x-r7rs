@@ -1,6 +1,6 @@
 ; # x-r7rs -- R7RS Scheme on x-lang
 ;
-; ## run.x -- THE entry
+; ## run.x -- the entry point
 ;
 ; @description R7RS-small as a thin layer over x-r5rs: case-lambda, records,
 ;   parameters, promises, cond-expand, and the R7RS library additions.
@@ -12,16 +12,12 @@
 ;   x -l r7rs               interactive
 ;   x -l r7rs -f prog.scm   batch
 ;
-; THIS FILE KNOWS NO PATHS, its dependency included.  x.sh boots the dialect
-; lang.xon declares, arms the root of every lang the manifest requires, arms
-; this bundle's own root last, cats this file, and appends the launcher when no
-; -f was given.  So both imports below resolve wherever the bundles happen to
-; sit, and neither this file nor the harness has to find anything.
-;
-; It used to carry the search itself -- derive its own root from the armed
-; import path, probe beside it for r5rs/ and x-r5rs/, and refuse with a message
-; nobody would see until run time.  (requires-lang "r5rs") replaced all of it,
-; and moved the refusal to startup where a missing dependency belongs.
+; This file contains no path literals, its dependency included. x.sh boots the
+; dialect lang.xon declares, arms the root of every lang the manifest requires,
+; arms this bundle's own root last, cats this file, and appends the launcher
+; when no -f was given, so both imports below resolve wherever the bundles sit.
+; (requires-lang "r5rs") in lang.xon is what makes a missing dependency a
+; startup refusal rather than a run-time surprise.
 (import r5rs/base)
 (import r7rs/base)
 

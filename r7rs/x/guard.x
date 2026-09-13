@@ -1,61 +1,31 @@
-; --- R7RS guard (§4.2.7) ---
+; --- R7RS guard (4.2.7) ---
 ;
 ; (guard (var clause ...) body ...) where each clause is (test expr ...) or
 ; (else expr ...) -- cond clauses, evaluated with the raised object bound to
 ; var.
 ;
-; DISPATCHED, NOT SHADOWED, for the reason x-lang#525 describes about `do`:
-; `guard` is a name the platform resolves BY NAME at run time, and one of its
-; callers is the spec runner's own error handler --
+; Dispatched, not shadowed, for the reason x-lang#525 describes about `do`:
+; `guard` is a name the platform resolves by name at run time, and one of its
+; callers is the spec runner's own error handler, which is x's shape (a
+; sequence of handler forms) not R7RS's (a list of cond clauses). Shadowing the
+; name with an R7RS-only transform would misread that handler.
 ;
-;   (guard (err (display "Error: ") (display err) (newline))
-;     (%repl-print (eval! %r)))
-;
-; -- which is x's shape, not R7RS's: a sequence of handler FORMS, not a list of
-; cond clauses.  Shadow the name with an R7RS-only transform and that handler
-; becomes (cond (display "Error: ") ...), which is not what anyone wrote.
-;
-; The two shapes are distinguishable where it matters.  R7RS clauses are all
-; pairs; an x handler sequence that is also all pairs behaves identically under
-; either reading only if its first form's head is truthy -- which for
-; (display ...) it is.  So the test below is necessary but not sufficient, and
-; the escape hatch is that anything with a non-pair among the handler forms
-; passes straight through untouched.
-;
-; AND IT IS ONLY SAFE ON AN ENGINE THAT CAN BIND UNDER A FRAME.
-; Shadowing `guard` at all -- however faithfully it dispatches -- interposes one
-; operative frame between the caller and the body it guards, and `define`'s
-; function-sugar branch does not survive it: (define (f p) p) binds nothing, so
-; f is unbound afterwards.
-;
-; Routing define through eval! (which is frame-independent for the value it
-; binds) was NOT sufficient -- measured, with the file loaded the suite is 97
-; failures against 85 without it.  An earlier draft of this note claimed a
-; proposed (base def-global) primitive fixed it; that primitive was withdrawn
-; and the claim was wrong.  What actually breaks under the extra frame has not
-; been isolated.
-;
-; The module is kept because the dispatcher below is correct and worth having
-; when the binding question is settled.
+; Installed conditionally, and only on an engine that can bind under a frame:
+; shadowing `guard` interposes one operative frame between the caller and the
+; guarded body, and `define`'s function-sugar branch does not survive that on
+; every engine. What exactly breaks under the extra frame has not been
+; isolated, so the shadow goes up only where the binding question is settled;
+; the dispatcher below is kept because it is correct and worth having then.
 
 (define %c-guard guard)
 
-; THE DISCRIMINATOR IS THE CLAUSE HEAD, not merely "is it a pair".
-;
-; Both shapes are lists of pairs, so "all pairs" does not separate them -- and
-; getting that wrong is worse than not dispatching at all, because the runner's
-; own error handler
-;
-;   (err (display "Error: ") (display err) (newline))
-;
-; then becomes (cond (display "Error: ") ...), whose first clause tests the
-; VALUE of `display` -- truthy -- and returns the string without printing it.
-; Every error in the suite is swallowed and 55 tests report empty output.
-;
-; An R7RS clause leads with a TEST: `else`, `#t`, or a predicate CALL, which is
-; a pair.  An x handler form leads with the operator of a statement -- a bare
-; symbol like display or newline.  So: every head must be `else`, `#t`, or a
-; pair.  Anything else is x's shape and passes through untouched.
+; The discriminator is the clause head, not merely "is it a pair": both shapes
+; are lists of pairs. An R7RS clause leads with a test -- `else`, `#t`, or a
+; predicate call (a pair). An x handler form leads with the operator of a
+; statement -- a bare symbol like display or newline. So every head must be
+; `else`, `#t`, or a pair; anything else is x's shape and passes through
+; untouched. Getting this wrong turns the runner's own handler into a `cond`
+; whose first clause tests the value of `display` and swallows the error.
 (define
   %r7rs-guard-head-test?
   (lambda (c)
@@ -78,17 +48,11 @@
           #f)
         #f))))
 
-; INSTALLED CONDITIONALLY.  Shadowing `guard` interposes an operative frame
-; between the caller and the guarded body, and `define` does not survive that
-; unless the engine carries (base def-global) -- measured with a bare
-; passthrough shadow, (define v 42), (define (f p) p) and
-; (define f (lambda (p) p)) ALL bind nothing.
-;
-; So the shadow goes up only when the binding question is answered.  On an
-; engine without the primitive this file loads and defines nothing, which costs
-; the 16 exception specs and keeps the other 39 that shadowing would break.
-; 637-spec suite: 42 failures with the shadow on a capable engine, 97 with it
-; on one without.  See x-lang#527.
+; Installed conditionally: shadowing `guard` interposes an operative frame
+; between the caller and the guarded body, which `define` does not survive
+; unless the engine carries (base def-global). On an engine without it this
+; file loads and defines nothing, which costs the exception specs and keeps the
+; ones shadowing would break. See x-lang#527.
 (if (null? (prim-ref (lit base) (lit def-global)))
   ()
   (begin
@@ -111,22 +75,16 @@
               body))
           env)))
     (define guard %r7rs-guard)
-    ; REGISTERED HERE, inside the same branch that installed it: an engine that
-    ; does not take the shadow must not take the hook either.
+    ; Registered here, inside the same branch that installed the shadow: an
+    ; engine that does not take the shadow must not take the hook either.
     ;
-    ;  AND THROUGH %def-global, NOT set!.  `guard` is bound TWICE -- bare by C
-    ; in the base spine, and here in the global tree -- and from inside a frame
-    ; set! answers ok while a later read still sees the old value: measured, the
-    ; image came back `unnameable: 2` with the restore thunk running and doing
-    ; nothing.  At top level the same set! works, which is what makes it a trap.
-    ; %def-global takes def's top-level path unconditionally (r5rs/aliases.x),
-    ; and is the door `define` itself uses.
-    ;  %c-guard is NILLED FOR THE WRITE and re-captured on load, the same way and
-    ; for the same reason as %c-error (scm/error.scm): the primitive travels
-    ; under its OWN name, which the loader restores, so no reference to a bare C
-    ; primitive has to survive the image.  That is the reason on its own; the
-    ; writer defect the note there used to cite does not reproduce on current
-    ; x-lang, and scm/error.scm says so rather than leaving the claim standing.
+    ; Through %def-global, not set!: `guard` is bound twice -- bare by C in the
+    ; base spine, and here in the global tree -- and from inside a frame a set!
+    ; answers ok while a later read still sees the old value. %def-global takes
+    ; def's top-level path unconditionally (r5rs/aliases.x), the door `define`
+    ; itself uses. %c-guard is nilled for the write and re-captured on load, the
+    ; same way and for the same reason as %c-error (scm/error.scm): the
+    ; primitive travels under its own name, which the loader restores.
     (%r7rs-shadow!
       (lambda () (begin (%def-global (lit guard) %c-guard)
                         (%def-global (lit %c-guard) ())))

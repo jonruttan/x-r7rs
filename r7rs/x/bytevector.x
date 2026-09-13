@@ -1,17 +1,12 @@
-; --- Bytevectors (R7RS §6.9) -- NOT LOADED IN THIS RELEASE ---
+; --- Bytevectors (R7RS 6.9) -- not loaded in this release ---
 ;
 ; 127 lines against the raw pointer layer: dlsym for malloc/memcpy, ptr-call,
-; ptr-ref/ptr-set!, string->ptr, and obj-make to wrap the allocation.  obj-make
-; no longer exists -- removed, not renamed -- and the rest are catalog entries
-; with a different calling convention.
-;
-; The platform grew Buf (lib/x/type/buf.x) in the meantime, which is a
-; collector-aware byte buffer and the obvious substrate for a bytevector.
-; Rebuilding on it is a rewrite, not a port, and is scoped as its own work
-; alongside the port layer -- the two share the same dlopen/ptr-call
-; dependency, and restoring either moves personality.xon's (dialect ...) to rn.
-;
-; Cost: the tests in tests/specs/21-bytevectors.spec.md.
+; ptr-ref/ptr-set!, string->ptr, and obj-make to wrap the allocation. obj-make
+; no longer exists, and the rest are catalog entries with a different calling
+; convention. The platform grew Buf (lib/x/type/buf.x), a collector-aware byte
+; buffer and the obvious substrate; rebuilding on it is a rewrite, scoped
+; alongside the port layer, and restoring either moves lang.xon's dialect to
+; rn. Cost: the tests in tests/specs/21-bytevectors.spec.md.
 
 ; --- Bytevectors (R7RS §6.9) ---
 ; 2-slot object: slot 0 = length, slot 1 = ptr to malloc'd byte buffer.
