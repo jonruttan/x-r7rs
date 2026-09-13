@@ -168,6 +168,7 @@ path.
 ```bash
 X=/path/to/x-lang/x.sh make test    # the spec suite -- every failure is loud
 X=/path/to/x-lang/x.sh make check   # the suite against known-failures.txt -- what CI gates on
+X=/path/to/x-lang/x.sh make lint    # the bundle's own sources, through x-lang's linter
 make check-release-refs             # the declared versions are named in one place
 X=/path/to/x-lang/x.sh make check-if-ladders   # no new nested-if ladders
 make bundle                         # roll a release tarball and print its pin
@@ -209,6 +210,32 @@ been outgrown but not lowered, so a fix cannot leave the file behind as a
 record of things that are fine. It needs no x-r5rs: the checker parses the
 modules and never evaluates them.
 
+`make lint` is the newest gate, and this bundle is the reason it took a
+platform fix to get here. The ladder rule above is one the *platform's* linter
+has known all along; the local copy exists because x-lang's `make lint-x` swept
+`lib/` and `apps/` and nothing else. Pointing the lang kit at a bundle was not
+enough for this one, though — x-r7rs stands on x-r5rs, `r7rs/base.x` reads
+`%r5rs-repl-print` at load time, and the linter's preload knew nothing of
+`(requires-lang ...)`. Importing that module to bind it for its siblings killed
+the engine instead: every file in every group, `(no verdict -- engine died
+mid-group)` under one `Unbound SYMBOL`. x-lang#689 reads the row and arms the
+required lang first, honouring `R5RS_ROOT` exactly as `gen-harness.sh` does —
+which is why the CI lint step is the spec step with the command swapped.
+
+It **skips itself** on an x whose linter predates x-lang#687/#689, which is
+every release up to and including v0.14.0, and says so rather than failing —
+a release is not this bundle's cadence to set. `--strict` is on, so the
+structural rules (`ladder`, `ladder-dict`, `shape`) fail the run; all eleven
+files are clean on all three.
+
+One caveat worth knowing before trusting it: the linter's `Undefined` rule is
+currently **dead in this bundle**, as it is in x-r5rs underneath — a planted
+undefined name is not reported, though x-krn reports the same plant correctly.
+The structural rules do fire, which is what `--strict` gates on, so the gate
+earns its place; it just is not yet the undefined-name check it looks like.
+[x-lang#690](https://github.com/jonruttan/x-lang/issues/690) has the
+reproduction.
+
 ## Layout
 
 ```
@@ -218,6 +245,7 @@ r7rs/base.x         the load order
 r7rs/scm/*.scm      the language, in Scheme
 r7rs/x/*.x          the parts that need x itself
 tests/specs/        the suite, as literate markdown
+tests/lint.sh       shims onto the lang kit's linter -- vendors nothing
 tests/contract/     the recorded debt CI gates on
 tools/check/        the gates: release-refs from x-lang's lang kit, and the
                     if-ladder linter, which is x because a ladder is a shape
