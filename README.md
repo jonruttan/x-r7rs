@@ -30,7 +30,7 @@ name, if it is missing.
 
 ## Status
 
-**610 of 637 specs green** against x-lang **v0.13.0** and x-r5rs **v0.2.3**.
+**610 of 637 specs green** against x-lang **v0.14.0** and x-r5rs **v0.2.3**.
 
 Sixteen of the recorded failures went on v0.9.0 without a line changing under
 `r7rs/` — the whole error-object surface and every `guard` case but one. The

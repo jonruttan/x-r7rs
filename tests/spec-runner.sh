@@ -136,7 +136,20 @@ else
 	if [ -n "$_builder" ]; then
 		# The trees the harness armed, in the order it armed them.
 		_keys=$(sed -n 's/^(import-path! "\(.*\)")$/\1/p' "$LANG_LIB")
-		if X_BIN="$X_BIN" sh "$_builder" "$LANG_LIB" "$BUNDLE/tests/lib/.images" $_keys; then
+		#  THIS BUNDLE DECLARES HOW ITS MODULES ARE SPELT.  image-build.sh keys
+		# a KEY-PATH by extension and knows only the platform's own .x -- the
+		# caller that arms a tree is the only thing that can know the rest, and
+		# nine of this bundle's language files are .scm: its scm/ layer IS the
+		# R5RS and R7RS library.  Unkeyed, editing one left the image "current"
+		# and the suite tested the library that was there BEFORE while IMG=0
+		# tested the one on disk: both legs green, at two different libraries.
+		#
+		# A BUILDER WITHOUT THIS DOOR IGNORES THE VARIABLE AND SAYS NOTHING, so
+		# this line is only load-bearing because lang.xon pins a release that
+		# has it -- x-lang v0.14.0, which is where IMG_KEY_EXT arrived
+		# (x-lang#652).  Moving the pin BACK below that release silently
+		# restores the stale image, so the two move together.
+		if IMG_KEY_EXT="x scm" X_BIN="$X_BIN" sh "$_builder" "$LANG_LIB" "$BUNDLE/tests/lib/.images" $_keys; then
 			X_IMG_DIR="$BUNDLE/tests/lib/.images"; export X_IMG_DIR
 		else
 			echo "x-r7rs: no state image (image-build exit $?) -- the suite boots from source" >&2
