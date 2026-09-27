@@ -9,6 +9,10 @@
 ; reads as Scheme.
 
 
+; The string type's handle, fetched by name through the platform's public
+; door.
+(define %r7rs-string-type (Type named STRING))
+
 (define
   define-record-type
   (op (name constructor-spec pred . field-specs)
@@ -34,7 +38,10 @@
                       (list (lit self))
                       (list
                         (lit display)
-                        (string-append "#<" (convert name %string) ">")))))))
+                        (string-append
+                          "#<"
+                          (convert name %r7rs-string-type)
+                          ">")))))))
             (list
               (lit %def-global)
               (list (lit quote) (car constructor-spec))
