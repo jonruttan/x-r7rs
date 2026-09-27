@@ -112,9 +112,9 @@ else
 		# this bundle's language files are .scm (its scm/ layer is the R5RS and
 		# R7RS library), so unkeyed, editing one would leave the image current
 		# while the suite tested the previous library. This line is load-bearing
-		# only because lang.xon pins a release with IMG_KEY_EXT (x-lang v0.14.0,
-		# x-lang#652); a builder without the door ignores the variable, so the
-		# pin and this move together.
+		# only because lang.xon pins a release with IMG_KEY_EXT, there since
+		# x-lang v0.14.0 (x-lang#652; release-ref: history); a builder without
+		# the door ignores the variable, so the pin and this move together.
 		if IMG_KEY_EXT="x scm" X_BIN="$X_BIN" sh "$_builder" "$LANG_LIB" "$BUNDLE/tests/lib/.images" $_keys; then
 			X_IMG_DIR="$BUNDLE/tests/lib/.images"; export X_IMG_DIR
 		else
