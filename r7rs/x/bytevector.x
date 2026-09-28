@@ -11,6 +11,13 @@
 ; --- Bytevectors (R7RS §6.9) ---
 ; 2-slot object: slot 0 = length, slot 1 = ptr to malloc'd byte buffer.
 
+; The type handles this file asks convert for, fetched by name through the
+; platform's public door.
+(define %r7rs-int-type (Type named INTEGER))
+(define %r7rs-string-type (Type named STRING))
+(define %r7rs-char-type (Type named CHARACTER))
+(define %r7rs-ptr-type (Type named POINTER))
+
 (define %bv-malloc (dlsym %libc "malloc"))
 (define %bv-memcpy (dlsym %libc "memcpy"))
 
@@ -34,7 +41,7 @@
 (define (bytevector? x) (type? x %bytevector))
 
 (define (%bv-alloc n)
-  (convert (ptr-call %bv-malloc (if (= n 0) 1 n)) %ptr))
+  (convert (ptr-call %bv-malloc (if (= n 0) 1 n)) %r7rs-ptr-type))
 
 (define (bytevector . bytes)
   (let ((len (length bytes)))
@@ -80,7 +87,10 @@
           (let ((dst (obj-ref new 1)))
             (if (> len 0)
               (ptr-call %bv-memcpy dst
-                (convert (+ (convert src %int) start) %ptr) len)))
+                (convert
+                  (+ (convert src %r7rs-int-type) start)
+                  %r7rs-ptr-type)
+                len)))
           new)))))
 
 (define (bytevector-copy! to at from . args)
@@ -91,8 +101,13 @@
       (let ((len (- end start)))
         (if (> len 0)
           (ptr-call %bv-memcpy
-            (convert (+ (convert (obj-ref to 1) %int) at) %ptr)
-            (convert (+ (convert (obj-ref from 1) %int) start) %ptr) len))))))
+            (convert
+              (+ (convert (obj-ref to 1) %r7rs-int-type) at)
+              %r7rs-ptr-type)
+            (convert
+              (+ (convert (obj-ref from 1) %r7rs-int-type) start)
+              %r7rs-ptr-type)
+            len))))))
 
 (define (bytevector-append . bvs)
   (let ((total (apply + (map bytevector-length bvs))))
@@ -103,7 +118,7 @@
             (let ((len (bytevector-length (car bvs))))
               (if (> len 0)
                 (ptr-call %bv-memcpy
-                  (convert (+ (convert dst %int) off) %ptr)
+                  (convert (+ (convert dst %r7rs-int-type) off) %r7rs-ptr-type)
                   (obj-ref (car bvs) 1) len))
               (loop (cdr bvs) (+ off len))))))
       new)))
@@ -118,8 +133,8 @@
           (let loop ((i start) (acc ()))
             (if (>= i end) (reverse acc)
               (loop (+ i 1)
-                (cons (convert (ptr-ref buf i 1) %char) acc))))
-          %string))))))
+                (cons (convert (ptr-ref buf i 1) %r7rs-char-type) acc))))
+          %r7rs-string-type))))))
 
 (define (string->utf8 str . args)
   (let ((start (if (null? args) 0 (car args)))
@@ -132,6 +147,6 @@
           (let loop ((i 0) (si start))
             (if (< i len)
               (begin
-                (ptr-set! buf i (convert (string-ref str si) %int) 1)
+                (ptr-set! buf i (convert (string-ref str si) %r7rs-int-type) 1)
                 (loop (+ i 1) (+ si 1))))))
         bv))))

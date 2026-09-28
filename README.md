@@ -30,7 +30,7 @@ name, if it is missing.
 
 ## Status
 
-**610 of 637 specs green** against x-lang **v0.14.0** and x-r5rs **v0.2.3**.
+**610 of 637 specs green** against x-lang **v0.15.0** and x-r5rs **v0.2.4**.
 
 The 27 that do not pass are recorded by name in
 [`tests/contract/known-failures.txt`](tests/contract/known-failures.txt), and
@@ -119,7 +119,7 @@ The exact block, digest filled in, is published with each release.
 `lang.xon` carries it as a row, not a probe:
 
 ```x
-(requires-lang "r5rs" "v0.2.3")
+(requires-lang "r5rs" "v0.2.4")
 ```
 
 x resolves it the same way it resolves `-l`, arms r5rs's root *before* this
@@ -134,11 +134,10 @@ tagged.
 that release's polymorphic port source and sink, and against v0.1.0 x-r7rs does
 not fail a spec, it fails to load.
 
-**v0.2.3 is what the row declares**, because the comparison is equality rather
+**v0.2.4 is what the row declares**, because the comparison is equality rather
 than a minimum: it answers *which x-r5rs was this built and tested against*,
-and only that version satisfies it. Nothing under `r5rs/` has changed since
-v0.2.0 — the releases since are the lang kit and successive x-lang pairings —
-so the floor has not moved, only the pairing.
+and only that version satisfies it. It is the first x-r5rs release that loads
+on x-lang v0.15.0. The floor has not moved, only the pairing.
 
 That is also the cost of equality matching: every x-r5rs release obsoletes this
 row, so the two move in lockstep. It is the price of *never parsed*, paid
@@ -181,7 +180,7 @@ invisible. Install into a real `<share>` tree, or use `X_LANG_DIR`.
 not satisfy the row — only an install or an unpacked release tarball carries
 the stamped `version` file the comparison reads. That stamp is `git describe`,
 so installing x-r5rs from a checkout that is not exactly on its tag produces
-something like `v0.2.3-1-gabc1234-dirty`, which is not `v0.2.3` and is refused
+something like `v0.2.4-1-gabc1234-dirty`, which is not `v0.2.4` and is refused
 by name. `--allow-lang-skew` is the way through while working on both at once.
 
 CI runs the declared release *and* x-lang `main`, so a platform that moves
