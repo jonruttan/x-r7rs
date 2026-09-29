@@ -30,7 +30,7 @@ name, if it is missing.
 
 ## Status
 
-**610 of 637 specs green** against x-lang **v0.15.0** and x-r5rs **v0.2.4**.
+**610 of 637 specs green** against x-lang **v0.17.0** and x-r5rs **v0.2.4**.
 
 The 27 that do not pass are recorded by name in
 [`tests/contract/known-failures.txt`](tests/contract/known-failures.txt), and
@@ -137,7 +137,7 @@ not fail a spec, it fails to load.
 **v0.2.4 is what the row declares**, because the comparison is equality rather
 than a minimum: it answers *which x-r5rs was this built and tested against*,
 and only that version satisfies it. It is the first x-r5rs release that loads
-on x-lang v0.15.0. The floor has not moved, only the pairing.
+on x-lang v0.15.0. The floor has not moved, only the pairing. <!-- release-ref: history: when r5rs v0.2.4 first loaded, not the pairing -->
 
 That is also the cost of equality matching: every x-r5rs release obsoletes this
 row, so the two move in lockstep. It is the price of *never parsed*, paid
