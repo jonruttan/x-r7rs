@@ -38,7 +38,7 @@
 ; address and would refuse the image.
 ;
 ; So the shadow is put down before the write and picked up after the load --
-; the transient shape tower-compiled.x uses, not float.x's nil-and-re-derive:
+; the transient pattern tower-compiled.x uses, not float.x's nil-and-re-derive:
 ; once a bare primitive's name is taken there is no other door to re-derive it
 ; from, so the image has to carry the primitive under its own name. A transient
 ; thunk in the writer's child puts the platform binding back before the walk,
@@ -54,9 +54,9 @@
   (fn (_ restore reshadow)
     (set! %r7rs-shadow-rows (pair (pair restore reshadow) %r7rs-shadow-rows))))
 ;  BEGIN, NOT do, AND THE REASON IS THIS BUNDLE'S OWN.  r5rs/scm/derived.scm
-; re-means `do` as R5RS iteration and tells sequencing apart by SHAPE: a first
+; re-means `do` as R5RS iteration and tells sequencing apart by structural pattern: a first
 ; argument whose every element is a pair reads as a binding list.  Calling a
-; thunk fetched from a row -- ((first (first l))) -- is exactly that shape, so
+; thunk fetched from a row -- ((first (first l))) -- is exactly that pattern, so
 ; (do ((first (first l))) (self (rest l))) bound `first`, tested `self`, and
 ; returned quietly having called NOTHING.  Measured: the restore thunk ran on
 ; every row and the image still came back `unnameable: 2`.  x/guard.x names this

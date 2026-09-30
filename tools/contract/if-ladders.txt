@@ -7,8 +7,8 @@
 # THIS FILE WAS BORN EMPTY, which is a measurement rather than a boast.  The
 # 31 three-armed `if`s across the bundle's ten modules are all chains of ONE
 # link, bar two of two in r7rs/x/guard.x -- the longest ladder here has two
-# arms, and the threshold is four.  The reason is the shape of the bundle:
-# it is a thin layer over x-r5rs, and the decisions with arms live in
+# arms, and the threshold is four.  The reason is that this bundle is a
+# thin layer over x-r5rs, and the decisions with arms live in
 # r7rs/scm/*.scm where `cond` is already the flat form.
 #
 # tools/check/if-ladders.sh fails on a new row, so the emptiness is the RULE

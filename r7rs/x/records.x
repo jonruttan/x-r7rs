@@ -1,12 +1,12 @@
 ; --- Records (R7RS 5.5) ---
 ;
 ; Every generated procedure is a `lambda`, not an `fn`. x's `fn` takes an
-; explicit receiver, so `fn`-shaped Scheme formals would bind the first real
-; parameter to the receiver and shift the rest off the end -- the constructor
-; would build a record from nothing and an accessor read a slot that is not
-; there. r5rs/aliases.x's `lambda` is the operative that splices the receiver
-; in, so emitting `lambda` makes the generated code correct by construction and
-; reads as Scheme.
+; explicit receiver, so binding Scheme formals directly to `fn`'s parameter
+; list would shift the first real parameter into the receiver and the rest
+; off the end -- the constructor would build a record from nothing and an
+; accessor read a slot that is not there. r5rs/aliases.x's `lambda` is the
+; operative that splices the receiver in, so emitting `lambda` makes the
+; generated code correct by construction and reads as Scheme.
 
 
 ; The string type's handle, fetched by name through the platform's public

@@ -31,15 +31,15 @@
 # is a function that should become a match, and the file may only get smaller.
 #
 # Set X to point at a particular x; otherwise the one on PATH is used.  The
-# checker itself is x -- an if ladder is a SHAPE, and reading the file as
-# s-expressions is the only way to see one.  A grep would count parens.
+# checker itself is x -- an if ladder has DEPTH, and reading the file as
+# s-expressions is the only way to see it.  A grep would count parens.
 #
 # NOT A GLOB, because a glob only sees one directory deep and this bundle keeps
 # seven of its ten modules under r7rs/x/ -- r7rs/*.x would leave most of the
 # bundle unchecked.  `find` also means a module directory that grows a
 # subdirectory later does not quietly open a hole in the gate.  The .scm
 # sources beside them are Scheme -- `cond` is the primitive there and this
-# shape is not the question -- so only *.x is fed in.
+# depth is not the question -- so only *.x is fed in.
 set -e
 
 BUNDLE="$(cd "$(dirname "$0")/../.." && pwd)"
