@@ -76,7 +76,7 @@ guard with cond clauses: guard with else clause
 
 # --- Numerics (3) ----------------------------------------------------------
 #
-# float arithmetic and expt are exactness questions of the kind x-r5rs settled
+# float arithmetic and expt are exactness questions like the ones x-r5rs settled
 # against R5RS 6.2.5 -- exact where the argument is exact and the value is
 # exactly representable.  The same treatment would fix these.
 #

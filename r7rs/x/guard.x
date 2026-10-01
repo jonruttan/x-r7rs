@@ -6,8 +6,8 @@
 ;
 ; Dispatched, not shadowed, for the reason x-lang#525 describes about `do`:
 ; `guard` is a name the platform resolves by name at run time, and one of its
-; callers is the spec runner's own error handler, which is x's shape (a
-; sequence of handler forms) not R7RS's (a list of cond clauses). Shadowing the
+; callers is the spec runner's own error handler, which is x's pattern
+; (a sequence of handler forms) not R7RS's (a list of cond clauses). Shadowing the
 ; name with an R7RS-only transform would misread that handler.
 ;
 ; Installed conditionally, and only on an engine that can bind under a frame:
@@ -19,11 +19,11 @@
 
 (define %c-guard guard)
 
-; The discriminator is the clause head, not merely "is it a pair": both shapes
+; The discriminator is the clause head, not merely "is it a pair": both patterns
 ; are lists of pairs. An R7RS clause leads with a test -- `else`, `#t`, or a
 ; predicate call (a pair). An x handler form leads with the operator of a
 ; statement -- a bare symbol like display or newline. So every head must be
-; `else`, `#t`, or a pair; anything else is x's shape and passes through
+; `else`, `#t`, or a pair; anything else is x's pattern and passes through
 ; untouched. Getting this wrong turns the runner's own handler into a `cond`
 ; whose first clause tests the value of `display` and swallows the error.
 (define

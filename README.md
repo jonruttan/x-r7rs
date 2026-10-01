@@ -187,8 +187,8 @@ CI runs the declared release *and* x-lang `main`, so a platform that moves
 underneath this bundle shows up as a red build rather than a surprise later.
 
 `make check-if-ladders` is the other gate, and it needs an `X`: the checker is
-itself x, because a nested-`if` ladder is a *shape* and only reading the module
-as s-expressions can see one — a grep would count parens. `match` is an engine
+itself x, because a nested-`if` ladder has *depth*, and only reading the module
+as s-expressions can see it — a grep would count parens. `match` is an engine
 primitive and the flat way to write a decision with more than a couple of arms;
 a chain of `if`s nested through their else branches says the same thing one
 indent deeper per arm. Four arms is the threshold, and
@@ -212,7 +212,7 @@ r7rs/x/*.x          the parts that need x itself
 tests/specs/        the suite, as literate markdown
 tests/contract/     the recorded debt CI gates on
 tools/check/        the gates: release-refs from x-lang's lang kit, and the
-                    if-ladder linter, which is x because a ladder is a shape
+                    if-ladder linter, which is x because a ladder's depth is what a grep cannot see
 tools/contract/     the recorded if-ladder debt -- empty, and saying so
 docs/               the R7RS reports
 ```
