@@ -30,7 +30,7 @@ name, if it is missing.
 
 ## Status
 
-**610 of 637 specs green** against x-lang **v0.24.0** and x-r5rs **v0.2.4**.
+**610 of 637 specs green** against x-lang **v0.25.0** and x-r5rs **v0.2.4**.
 
 The 27 that do not pass are recorded by name in
 [`tests/contract/known-failures.txt`](tests/contract/known-failures.txt), and
