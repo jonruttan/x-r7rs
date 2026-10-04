@@ -22,7 +22,7 @@
 ; The x-lang release this bundle is built and tested against; CI compares it
 ; for equality.
 
-(requires-release "v0.24.0")
+(requires-release "v0.25.0")
 
 ; R7RS is R5RS plus about 700 lines, and this row is what says so. x.sh
 ; resolves it the way it resolves -l, arms the required lang's root before this
