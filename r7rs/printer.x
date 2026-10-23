@@ -12,4 +12,5 @@
 ; day R7RS's datum labels (#0=, #0#) need a writer of their own, there is an
 ; obvious place to put it.
 
+(module r7rs/printer)
 (provide r7rs/printer)

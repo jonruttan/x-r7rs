@@ -1,5 +1,6 @@
 ; --- case-lambda (R7RS §4.2.9) ---
 
+(module r7rs/x/case-lambda)
 (define
   case-lambda
   (op clauses

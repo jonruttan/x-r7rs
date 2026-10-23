@@ -12,16 +12,16 @@
   (lambda (message . irritants)
     (%c-error (list %error-label message irritants))))
 (define error %r7rs-error)
-; Through %def-global, not set!: a name bound both bare by C and in the global
+; Through r5rs-def-global, not set!: a name bound both bare by C and in the global
 ; tree does not take a set! from inside a frame (see the note in x/guard.x).
 ; %c-error is nilled for the write and re-captured on load, so no reference to
 ; a bare C primitive survives the image -- only the name does, which the loader
 ; restores against its own base. This is float.x's transient discipline.
-(%r7rs-shadow!
-  (lambda () (begin (%def-global (lit error) %c-error)
-                    (%def-global (lit %c-error) ())))
-  (lambda () (begin (%def-global (lit %c-error) error)
-                    (%def-global (lit error) %r7rs-error))))
+(r7rs-shadow!
+  (lambda () (begin (r5rs-def-global (lit error) %c-error)
+                    (r5rs-def-global (lit %c-error) ())))
+  (lambda () (begin (r5rs-def-global (lit %c-error) error)
+                    (r5rs-def-global (lit error) %r7rs-error))))
 
 (define (error-object? obj)
   (and (pair? obj) (eq? (car obj) %error-label)))

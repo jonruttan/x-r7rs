@@ -11,6 +11,7 @@
 
 ; The string type's handle, fetched by name through the platform's public
 ; door.
+(module r7rs/x/records)
 (define %r7rs-string-type (Type named STRING))
 
 (define
@@ -23,7 +24,7 @@
         (append
           (list
             (list
-              (lit %def-global)
+              (lit r5rs-def-global)
               (list (lit quote) name)
               (list
                 (lit make-type)
@@ -43,7 +44,7 @@
                           (convert name %r7rs-string-type)
                           ">")))))))
             (list
-              (lit %def-global)
+              (lit r5rs-def-global)
               (list (lit quote) (car constructor-spec))
               (list
                 (lit lambda)
@@ -57,7 +58,7 @@
                       (lambda (f) (list (lit pair) (list (lit quote) f) f))
                       (cdr constructor-spec))))))
             (list
-              (lit %def-global)
+              (lit r5rs-def-global)
               (list (lit quote) pred)
               (list
                 (lit lambda)
@@ -68,7 +69,7 @@
               (lambda
                 (spec)
                 (list
-                  (lit %def-global)
+                  (lit r5rs-def-global)
                   (list (lit quote) (list-ref spec 1))
                   (list
                     (lit lambda)
