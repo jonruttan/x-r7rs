@@ -1,5 +1,6 @@
 ; --- cond-expand (R7RS §4.2.1) ---
 
+(module r7rs/x/cond-expand)
 (define %features (list (lit r7rs) (lit x-lang) (lit ieee-float)))
 
 (define (%feature-match? req)

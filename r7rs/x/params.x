@@ -1,5 +1,6 @@
 ; --- Parameters (R7RS §4.2.6) ---
 
+(module r7rs/x/params)
 (define (make-parameter init . converter)
   (let ((conv (if (null? converter) #f (car converter))))
     (let ((val (if conv (conv init) init)))

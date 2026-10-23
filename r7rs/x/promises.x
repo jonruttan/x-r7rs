@@ -1,5 +1,6 @@
 ; --- Promises (R7RS §4.2.5) ---
 
+(module r7rs/x/promises)
 (define
   %promise
   (make-type

@@ -19,11 +19,11 @@
 ; (requires-lang "r5rs") in lang.xon is what makes a missing dependency a
 ; startup refusal rather than a run-time surprise.
 (import r5rs/base)
-(import r7rs/base)
+(import r7rs/base r7rs-version r7rs-repl-print)
 
 (set! %lang-name "R7RS Scheme")
 (set! %lang-version r7rs-version)
 (set! %repl-prompt "> ")
 ; Scheme results, not x's round-trippable ones -- see the r5rs bundle's
 ; printer.x, which this one re-exports.
-(set! %repl-print %r7rs-repl-print)
+(set! %repl-print r7rs-repl-print)

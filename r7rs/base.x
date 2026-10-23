@@ -15,9 +15,10 @@
 ; No path literals and no dialect boot here: run.x owns both. Siblings are
 ; reached by ./-relative include-once, which resolves against this file.
 
+(module r7rs/base)
 (import r7rs/printer)
-
-(provide r7rs/base r7rs-version %r7rs-repl-print)
+(import r5rs/printer r5rs-repl-print)
+(import r7rs/shadow r7rs-shadows-down! r7rs-shadows-up!)
 
 (def r7rs-version "0.1.0")
 
@@ -26,7 +27,7 @@
 ; this bundle re-exports the repl hook under its own name so run.x has one
 ; spelling to set.  (Three bundles have now needed the same twenty lines --
 ; x-lang#518.)
-(def %r7rs-repl-print %r5rs-repl-print)
+(def r7rs-repl-print r5rs-repl-print)
 
 ; --- What this bundle shadows, and the state image ---------------------------
 ;
@@ -49,38 +50,6 @@
 ; cannot disagree with what was rebound. x/guard.x installs its one
 ; conditionally, and an engine that does not get the shadow must not get the
 ; hook either.
-(def %r7rs-shadow-rows ())          ; ((restore . reshadow) ...), newest first
-(def %r7rs-shadow!
-  (fn (_ restore reshadow)
-    (set! %r7rs-shadow-rows (pair (pair restore reshadow) %r7rs-shadow-rows))))
-;  BEGIN, NOT do, AND THE REASON IS THIS BUNDLE'S OWN.  r5rs/scm/derived.scm
-; re-means `do` as R5RS iteration and tells sequencing apart by structural pattern: a first
-; argument whose every element is a pair reads as a binding list.  Calling a
-; thunk fetched from a row -- ((first (first l))) -- is exactly that pattern, so
-; (do ((first (first l))) (self (rest l))) bound `first`, tested `self`, and
-; returned quietly having called NOTHING.  Measured: the restore thunk ran on
-; every row and the image still came back `unnameable: 2`.  x/guard.x names this
-; very form as the heuristic's known hole and says no such form exists in this
-; bundle; it did, here.  `begin` is r5rs/aliases.x's capture of x's own
-; sequencing operative, taken before derived.scm rebinds the name, so it cannot
-; be re-read.
-(def %r7rs-shadows-down!
-  (fn (_)
-    ((fn (self l)
-       (if (null? l) ()
-         (begin ((first (first l))) (self (rest l)))))
-     %r7rs-shadow-rows)))
-(def %r7rs-shadows-up!
-  (fn (_)
-    ((fn (self l)
-       (if (null? l) ()
-         (begin ((rest (first l))) (self (rest l)))))
-     %r7rs-shadow-rows)))
-; GUARDED, because a platform older than the image tools binds neither list --
-; and `guard` is still x's own here, three includes ahead of x/guard.x.
-(guard (_ ())
-  (begin (set! %image-transients (pair %r7rs-shadows-down! %image-transients))
-         (set! %image-recache-hooks (pair %r7rs-shadows-up! %image-recache-hooks))))
 
 ; --- x-lang native constructs ------------------------------------------------
 (include-once "./x/case-lambda.x")
@@ -110,3 +79,5 @@
 ; that bundle rewrote its ports onto the platform's File.  What this adds is
 ; string ports, built on that layer's polymorphic source.
 (include-once "./scm/ports.scm")
+
+(provide r7rs/base r7rs-version r7rs-repl-print)

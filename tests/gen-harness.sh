@@ -105,6 +105,6 @@ cat > "$OUT" <<EOF
 (include "$X_BASE")
 $DEP_FORMS(import-path! "$BUNDLE")
 (import r5rs/base)
-(import r7rs/base)
-(set! %repl-print %r7rs-repl-print)
+(import r7rs/base r7rs-repl-print)
+(set! %repl-print r7rs-repl-print)
 EOF

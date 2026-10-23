@@ -17,6 +17,8 @@
 ; isolated, so the shadow goes up only where the binding question is settled;
 ; the dispatcher below is kept because it is correct and worth having then.
 
+(module r7rs/x/guard)
+(import r7rs/shadow r7rs-shadow!)
 (define %c-guard guard)
 
 ; The discriminator is the clause head, not merely "is it a pair": both patterns
@@ -78,15 +80,15 @@
     ; Registered here, inside the same branch that installed the shadow: an
     ; engine that does not take the shadow must not take the hook either.
     ;
-    ; Through %def-global, not set!: `guard` is bound twice -- bare by C in the
+    ; Through r5rs-def-global, not set!: `guard` is bound twice -- bare by C in the
     ; base spine, and here in the global tree -- and from inside a frame a set!
-    ; answers ok while a later read still sees the old value. %def-global takes
+    ; answers ok while a later read still sees the old value. r5rs-def-global takes
     ; def's top-level path unconditionally (r5rs/aliases.x), the door `define`
     ; itself uses. %c-guard is nilled for the write and re-captured on load, the
     ; same way and for the same reason as %c-error (scm/error.scm): the
     ; primitive travels under its own name, which the loader restores.
-    (%r7rs-shadow!
-      (lambda () (begin (%def-global (lit guard) %c-guard)
-                        (%def-global (lit %c-guard) ())))
-      (lambda () (begin (%def-global (lit %c-guard) guard)
-                        (%def-global (lit guard) %r7rs-guard))))))
+    (r7rs-shadow!
+      (lambda () (begin (r5rs-def-global (lit guard) %c-guard)
+                        (r5rs-def-global (lit %c-guard) ())))
+      (lambda () (begin (r5rs-def-global (lit %c-guard) guard)
+                        (r5rs-def-global (lit guard) %r7rs-guard))))))

@@ -13,6 +13,7 @@
 
 ; The type handles this file asks convert for, fetched by name through the
 ; platform's public door.
+(module r7rs/x/bytevector)
 (define %r7rs-int-type (Type named INTEGER))
 (define %r7rs-string-type (Type named STRING))
 (define %r7rs-char-type (Type named CHARACTER))
