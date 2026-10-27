@@ -178,3 +178,45 @@
 ---
     20
 
+
+## define from a nested frame
+
+### binds the top-level name from inside a procedure's frame
+
+```scheme
+(define (%r7rs-dg-set) (if #t (define %r7rs-dg-probe 7) #f)) (%r7rs-dg-set) %r7rs-dg-probe
+```
+---
+    7
+
+### and through a frame interposed above it
+
+```scheme
+(define (%r7rs-dg-inner) (if #t (define %r7rs-dg-deep 9) #f)) (define (%r7rs-dg-outer) (%r7rs-dg-inner)) (%r7rs-dg-outer) %r7rs-dg-deep
+```
+---
+    9
+
+### a redefinition at depth updates the top-level cell in place
+
+```scheme
+(define %r7rs-dg-twice 1) (define (%r7rs-dg-again) (if #t (define %r7rs-dg-twice 2) #f)) (%r7rs-dg-again) %r7rs-dg-twice
+```
+---
+    2
+
+### from a guarded body inside a procedure's frame
+
+```scheme
+(define (%r7rs-dg-guarded) (guard (e (#t 0)) (if #t (define %r7rs-dg-body 11) #f))) (%r7rs-dg-guarded) %r7rs-dg-body
+```
+---
+    11
+
+### from a guard handler
+
+```scheme
+(guard (e (#t (define %r7rs-dg-handled 5))) (error "boom")) %r7rs-dg-handled
+```
+---
+    5

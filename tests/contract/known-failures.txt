@@ -24,10 +24,6 @@
 # platform, which is red here in the "a fix left unrecorded re-authorises the
 # failure later" direction.  Fifteen were the error-object and guard group and
 # one was a cond-expand body; what remains of that group is a single clause.
-#
-# The capability was named in this file before it was adopted: the old note
-# said the guard shadow works around the engine's frame-depth binding and that
-# (base def-global) would let the shadow go.  It has, upstream.
 
 # --- Bytevectors (23) ------------------------------------------------------
 #
