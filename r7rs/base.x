@@ -51,6 +51,13 @@
 ; conditionally, and an engine that does not get the shadow must not get the
 ; hook either.
 
+; A root binding from any frame: eval! evaluates in the root whatever the frame
+; depth (engine law 10). The (lit ...) wrap keeps def from evaluating the value
+; a second time -- a symbol value would be looked up. Global, because the code
+; x/records.x generates is evaluated at its use site, and the image rows
+; x/guard.x and scm/error.scm register reach it by name.
+(def %r7rs-def-root (fn (_ n v) (eval! (list (lit def) n (list (lit lit) v)))))
+
 ; --- x-lang native constructs ------------------------------------------------
 (include-once "./x/case-lambda.x")
 (include-once "./x/promises.x")
@@ -59,9 +66,8 @@
 (include-once "./x/cond-expand.x")
 ; R7RS `guard` and x's `guard` are different forms with the same name, so
 ; providing one shadows the other, which interposes a call frame between the
-; runner's %seq and the body it guards. r5rs/aliases.x's define goes through
-; (base def-global), which takes the global path whatever the frame depth, so
-; a `define` inside a guarded body still binds.
+; runner's %seq and the body it guards. `define` binds in the root whatever the
+; frame depth (engine law 10), so a `define` inside a guarded body still binds.
 (include-once "./x/guard.x")
 ; ./x/bytevector.x is NOT loaded -- see the note at the top of that file.
 
@@ -80,4 +86,4 @@
 ; string ports, built on that layer's polymorphic source.
 (include-once "./scm/ports.scm")
 
-(provide r7rs/base r7rs-version r7rs-repl-print)
+(provide r7rs/base (global %r7rs-def-root) r7rs-version r7rs-repl-print)

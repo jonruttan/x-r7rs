@@ -24,7 +24,7 @@
         (append
           (list
             (list
-              (lit r5rs-def-global)
+              (lit %r7rs-def-root)
               (list (lit quote) name)
               (list
                 (lit make-type)
@@ -44,7 +44,7 @@
                           (convert name %r7rs-string-type)
                           ">")))))))
             (list
-              (lit r5rs-def-global)
+              (lit %r7rs-def-root)
               (list (lit quote) (car constructor-spec))
               (list
                 (lit lambda)
@@ -58,7 +58,7 @@
                       (lambda (f) (list (lit pair) (list (lit quote) f) f))
                       (cdr constructor-spec))))))
             (list
-              (lit r5rs-def-global)
+              (lit %r7rs-def-root)
               (list (lit quote) pred)
               (list
                 (lit lambda)
@@ -69,7 +69,7 @@
               (lambda
                 (spec)
                 (list
-                  (lit r5rs-def-global)
+                  (lit %r7rs-def-root)
                   (list (lit quote) (list-ref spec 1))
                   (list
                     (lit lambda)

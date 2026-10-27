@@ -10,12 +10,9 @@
 ; (a sequence of handler forms) not R7RS's (a list of cond clauses). Shadowing the
 ; name with an R7RS-only transform would misread that handler.
 ;
-; Installed conditionally, and only on an engine that can bind under a frame:
-; shadowing `guard` interposes one operative frame between the caller and the
-; guarded body, and `define`'s function-sugar branch does not survive that on
-; every engine. What exactly breaks under the extra frame has not been
-; isolated, so the shadow goes up only where the binding question is settled;
-; the dispatcher below is kept because it is correct and worth having then.
+; Shadowing `guard` interposes one operative frame between the caller and the
+; guarded body. `define` binds in the root whatever the frame depth (engine
+; law 10), so a `define` inside the guarded body still binds.
 
 (module r7rs/x/guard)
 (import r7rs/shadow r7rs-shadow!)
@@ -50,45 +47,34 @@
           #f)
         #f))))
 
-; Installed conditionally: shadowing `guard` interposes an operative frame
-; between the caller and the guarded body, which `define` does not survive
-; unless the engine carries (base def-global). On an engine without it this
-; file loads and defines nothing, which costs the exception specs and keeps the
-; ones shadowing would break. See x-lang#527.
-(if (null? (prim-ref (lit base) (lit def-global)))
-  ()
-  (begin
-    ; NAMED, then installed.  The op is a global of its own so that the state
-    ; image table in r7rs/base.x has something to put BACK: its restore thunk
-    ; hands `guard` to the platform primitive for the write -- the only form in
-    ; which the image can name it -- and its reshadow thunk hands it to this.
-    (define
-      %r7rs-guard
-      (op (clause . body)
-        env
-        (eval
-          (cons (lit %c-guard)
-            (cons
-              (if (%r7rs-guard-clauses? (cdr clause))
-                ; R7RS: the handler is a cond over the clauses.
-                (list (car clause) (cons (lit cond) (cdr clause)))
-                ; x: the handler forms are already the handler.
-                clause)
-              body))
-          env)))
-    (define guard %r7rs-guard)
-    ; Registered here, inside the same branch that installed the shadow: an
-    ; engine that does not take the shadow must not take the hook either.
-    ;
-    ; Through r5rs-def-global, not set!: `guard` is bound twice -- bare by C in the
-    ; base spine, and here in the global tree -- and from inside a frame a set!
-    ; answers ok while a later read still sees the old value. r5rs-def-global takes
-    ; def's top-level path unconditionally (r5rs/aliases.x), the door `define`
-    ; itself uses. %c-guard is nilled for the write and re-captured on load, the
-    ; same way and for the same reason as %c-error (scm/error.scm): the
-    ; primitive travels under its own name, which the loader restores.
-    (r7rs-shadow!
-      (lambda () (begin (r5rs-def-global (lit guard) %c-guard)
-                        (r5rs-def-global (lit %c-guard) ())))
-      (lambda () (begin (r5rs-def-global (lit %c-guard) guard)
-                        (r5rs-def-global (lit guard) %r7rs-guard))))))
+; NAMED, then installed.  The op is a global of its own so that the state
+; image table in r7rs/base.x has something to put BACK: its restore thunk
+; hands `guard` to the platform primitive for the write -- the only form in
+; which the image can name it -- and its reshadow thunk hands it to this.
+(define
+  %r7rs-guard
+  (op (clause . body)
+    env
+    (eval
+      (cons (lit %c-guard)
+        (cons
+          (if (%r7rs-guard-clauses? (cdr clause))
+            ; R7RS: the handler is a cond over the clauses.
+            (list (car clause) (cons (lit cond) (cdr clause)))
+            ; x: the handler forms are already the handler.
+            clause)
+          body))
+      env)))
+(define guard %r7rs-guard)
+; Through %r7rs-def-root, not set!: `guard` is bound twice -- bare by C in the
+; base spine, and here in the global tree -- and from inside a frame a set!
+; answers ok while a later read still sees the old value. %r7rs-def-root
+; (r7rs/base.x) binds in the root whatever the frame depth. %c-guard is nilled
+; for the write and re-captured on load, the same way and for the same reason
+; as %c-error (scm/error.scm): the primitive travels under its own name, which
+; the loader restores.
+(r7rs-shadow!
+  (lambda () (begin (%r7rs-def-root (lit guard) %c-guard)
+                    (%r7rs-def-root (lit %c-guard) ())))
+  (lambda () (begin (%r7rs-def-root (lit %c-guard) guard)
+                    (%r7rs-def-root (lit guard) %r7rs-guard))))
