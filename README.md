@@ -47,35 +47,29 @@ regression cannot.
 The library system, `define-library` and `import`, is not implemented: the
 whole language is loaded at once.
 
-This README describes `main`. The latest release, v0.1.6, is older, and
-requires the x-r5rs release before the current one; see Install.
-
 ## Install
 
-x-r5rs from its release, then this bundle from a clone:
+Nothing cloned, from any directory:
 
 ```bash
 x --install-lang https://github.com/jonruttan/x-r5rs/releases/latest/download/lang.pin.xon
-make install                      # into the x on your PATH
-PREFIX=$HOME/.local make install  # or a particular prefix
+x --install-lang https://github.com/jonruttan/x-r7rs/releases/latest/download/lang.pin.xon
 x -l r7rs
 ```
 
-x-r7rs requires x-r5rs at one exact version, the one `lang.xon` names, and
-refuses by name when it is absent or another. `make uninstall` removes this
-bundle again.
+x fetches each published pin, then the tarball it names, verifies the digest,
+and installs to `<share>/langs/`, where `x -l` looks. Install x-r5rs first:
+x-r7rs requires it at one exact version, the one `lang.xon` names, and
+refuses by name when it is absent or another.
 
-The latest release of this bundle requires the x-r5rs release before the
-current one, so the two `releases/latest` pins do not install together. To
-install that release, name both versions:
+From a clone:
 
 ```bash
-x --install-lang https://github.com/jonruttan/x-r5rs/releases/download/v0.2.4/lang.pin.xon
-x --install-lang https://github.com/jonruttan/x-r7rs/releases/download/v0.1.6/lang.pin.xon
+make install                      # into the x on your PATH
+PREFIX=$HOME/.local make install  # or a particular prefix
 ```
 
-x fetches each published pin, then the tarball it names, verifies the digest,
-and installs to `<share>/langs/`, where `x -l` looks.
+`make uninstall` removes it either way.
 
 **Installing writes a boot image.** `make install` ends with
 `x --image -l r7rs`, which saves the booted language to `.images/` beside the
@@ -117,8 +111,8 @@ digest before unpacking. In the project's `lang.pin.xon`:
 
 ```x
 (lang "r7rs")
-(release "v0.1.6")
-(bundle "sha256:…" "https://github.com/jonruttan/x-r7rs/releases/download/v0.1.6/x-r7rs-v0.1.6.tar.gz")
+(release "v0.1.7")
+(bundle "sha256:…" "https://github.com/jonruttan/x-r7rs/releases/download/v0.1.7/x-r7rs-v0.1.7.tar.gz")
 (source "https://github.com/jonruttan/x-r7rs.git")
 ```
 
