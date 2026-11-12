@@ -44,28 +44,38 @@ regression cannot.
 | **`guard` with `else`** | 1 | the last of a group of 16; every other clause form passes, so it is the clause dispatcher rather than error objects. |
 | **Numerics** | 3 | `4.0` where the 2024 suite expects `4`. |
 
+The library system, `define-library` and `import`, is not implemented: the
+whole language is loaded at once.
+
+This README describes `main`. The latest release, v0.1.6, is older, and
+requires the x-r5rs release before the current one; see Install.
+
 ## Install
 
-Nothing cloned, from any directory:
+x-r5rs from its release, then this bundle from a clone:
 
 ```bash
 x --install-lang https://github.com/jonruttan/x-r5rs/releases/latest/download/lang.pin.xon
-x --install-lang https://github.com/jonruttan/x-r7rs/releases/latest/download/lang.pin.xon
+make install                      # into the x on your PATH
+PREFIX=$HOME/.local make install  # or a particular prefix
 x -l r7rs
 ```
 
-x fetches each published pin, then the tarball it names, verifies the digest,
-and installs to `<share>/langs/` — where `x -l` looks. **Install x-r5rs
-first**: x-r7rs requires it and will say so by name if it is absent.
+x-r7rs requires x-r5rs at one exact version, the one `lang.xon` names, and
+refuses by name when it is absent or another. `make uninstall` removes this
+bundle again.
 
-From a clone, if you have one:
+The latest release of this bundle requires the x-r5rs release before the
+current one, so the two `releases/latest` pins do not install together. To
+install that release, name both versions:
 
 ```bash
-make install                      # into the x on your PATH
-PREFIX=$HOME/.local make install  # or a particular prefix
+x --install-lang https://github.com/jonruttan/x-r5rs/releases/download/v0.2.4/lang.pin.xon
+x --install-lang https://github.com/jonruttan/x-r7rs/releases/download/v0.1.6/lang.pin.xon
 ```
 
-`make uninstall` removes it either way.
+x fetches each published pin, then the tarball it names, verifies the digest,
+and installs to `<share>/langs/`, where `x -l` looks.
 
 **Installing writes a boot image.** `make install` ends with
 `x --image -l r7rs`, which saves the booted language to `.images/` beside the
@@ -107,8 +117,8 @@ digest before unpacking. In the project's `lang.pin.xon`:
 
 ```x
 (lang "r7rs")
-(release "v0.1.3")
-(bundle "sha256:…" "https://github.com/jonruttan/x-r7rs/releases/download/v0.1.3/x-r7rs-v0.1.3.tar.gz")
+(release "v0.1.6")
+(bundle "sha256:…" "https://github.com/jonruttan/x-r7rs/releases/download/v0.1.6/x-r7rs-v0.1.6.tar.gz")
 (source "https://github.com/jonruttan/x-r7rs.git")
 ```
 
@@ -181,7 +191,7 @@ invisible. Install into a real `<share>` tree, or use `X_LANG_DIR`.
 not satisfy the row — only an install or an unpacked release tarball carries
 the stamped `version` file the comparison reads. That stamp is `git describe`,
 so installing x-r5rs from a checkout that is not exactly on its tag produces
-something like `v0.2.4-1-gabc1234-dirty`, which is not `v0.2.4` and is refused
+something like `v0.2.5-1-gabc1234-dirty`, which is not `v0.2.5` and is refused
 by name. `--allow-lang-skew` is the way through while working on both at once.
 
 CI runs the declared release *and* x-lang `main`, so a platform that moves
@@ -194,7 +204,7 @@ primitive and the flat way to write a decision with more than a couple of arms;
 a chain of `if`s nested through their else branches says the same thing one
 indent deeper per arm. Four arms is the threshold, and
 `tools/contract/if-ladders.txt` is **empty**: the 31 three-armed `if`s across
-the ten modules are chains of one link, bar two of two in `r7rs/x/guard.x`,
+the modules are chains of one link, bar two of two in `r7rs/x/guard.x`,
 because this bundle is a thin layer over x-r5rs and the decisions with arms
 live in `r7rs/scm/*.scm` where `cond` is already flat. The check is a ratchet
 in both directions — a new ladder is red, and so is a manifest row that has
@@ -208,6 +218,9 @@ modules and never evaluates them.
 lang.xon            what this bundle IS -- name, dialect, dependencies
 run.x               the entry point lang.xon names
 r7rs/base.x         the load order
+r7rs/constructs.x   construct declarations: how each form formats and scopes
+r7rs/printer.x      re-exports x-r5rs's write
+r7rs/shadow.x       the names R7RS shadows, restored around an image
 r7rs/scm/*.scm      the language, in Scheme
 r7rs/x/*.x          the parts that need x itself
 tests/specs/        the suite, as literate markdown
@@ -226,7 +239,7 @@ chartered as two languages. R7RS-small — ratified 2013, edited by Alex Shinn,
 John Cowan and Arthur Gleckler — returns to R5RS's size and spirit while
 fixing what experience had settled: records, exceptions and `guard`,
 bytevectors, string ports, parameters, `cond-expand`, and a library system.
-That delta is exactly what this bundle is: R5RS plus about 700 lines. The
+That delta is what this bundle is: a layer over x-r5rs. The
 large edition remains a work in progress.
 
 - [R7RS-small](https://small.r7rs.org/) — the report
