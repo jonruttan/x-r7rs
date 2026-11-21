@@ -25,6 +25,7 @@
           (list
             (list
               (lit %r7rs-def-root)
+              (list (lit Env) (lit current))
               (list (lit quote) name)
               (list
                 (lit make-type)
@@ -45,6 +46,7 @@
                           ">")))))))
             (list
               (lit %r7rs-def-root)
+              (list (lit Env) (lit current))
               (list (lit quote) (car constructor-spec))
               (list
                 (lit lambda)
@@ -59,6 +61,7 @@
                       (cdr constructor-spec))))))
             (list
               (lit %r7rs-def-root)
+              (list (lit Env) (lit current))
               (list (lit quote) pred)
               (list
                 (lit lambda)
@@ -70,6 +73,7 @@
                 (spec)
                 (list
                   (lit %r7rs-def-root)
+                  (list (lit Env) (lit current))
                   (list (lit quote) (list-ref spec 1))
                   (list
                     (lit lambda)

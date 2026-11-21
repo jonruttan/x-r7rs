@@ -19,6 +19,8 @@
 (import r7rs/printer)
 (import r5rs/printer r5rs-repl-print)
 (import r7rs/shadow r7rs-shadows-down! r7rs-shadows-up!)
+(import x/core/doors obj-same?)
+(import x/type/env)
 
 (def r7rs-version "0.1.0")
 
@@ -51,12 +53,33 @@
 ; conditionally, and an engine that does not get the shadow must not get the
 ; hook either.
 
-; A root binding from any frame: eval! evaluates in the root whatever the frame
-; depth (engine law 10). The (lit ...) wrap keeps def from evaluating the value
-; a second time -- a symbol value would be looked up. Global, because the code
-; x/records.x generates is evaluated at its use site, and the image rows
-; x/guard.x and scm/error.scm register reach it by name.
-(def %r7rs-def-root (fn (_ n v) (eval! (list (lit def) n (list (lit lit) v)))))
+; A top-level binding from any frame: at the top level of the code that asks,
+; whose environment E it passes as (Env current). The (lit ...) wrap keeps def
+; from evaluating the value a second time -- a symbol value would be looked
+; up. Global, because the code x/records.x generates is evaluated at its use
+; site, and the image rows x/guard.x and scm/error.scm register reach it by
+; name.
+;
+; There are two top levels once the platform gives the program an environment
+; of its own, a child of the library's (x-lang#1406): the program's, which
+; (Env root) answers, and the platform's, with no parent. A record a program
+; defines binds in the program's. This library is read inside a module, a
+; child of the platform's environment and not of the program's, so what it
+; binds for itself -- its shadows of guard and error -- binds in the
+; platform's, where the module and the program both read it. eval!, which
+; this was, evaluates in the program's from anywhere.
+;
+; %r7rs-top-env walks from E to whichever it meets first. Before the split
+; the two are one environment and the walk ends there, which is where eval!
+; bound. x-r5rs's define walks the same way from the release after v0.2.5.
+(def %r7rs-top-env
+  (fn (self e top)
+    (if (obj-same? e top)
+      e
+      (if (null? (Env parent e)) e (self (Env parent e) top)))))
+(def %r7rs-def-root
+  (fn (_ e n v)
+    (eval (list (lit def) n (list (lit lit) v)) (%r7rs-top-env e (Env root)))))
 
 ; --- x-lang native constructs ------------------------------------------------
 (include-once "./x/case-lambda.x")

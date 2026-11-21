@@ -69,12 +69,12 @@
 ; Through %r7rs-def-root, not set!: `guard` is bound twice -- bare by C in the
 ; base spine, and here in the global tree -- and from inside a frame a set!
 ; answers ok while a later read still sees the old value. %r7rs-def-root
-; (r7rs/base.x) binds in the root whatever the frame depth. %c-guard is nilled
+; (r7rs/base.x) binds at the top level whatever the frame depth. %c-guard is nilled
 ; for the write and re-captured on load, the same way and for the same reason
 ; as %c-error (scm/error.scm): the primitive travels under its own name, which
 ; the loader restores.
 (r7rs-shadow!
-  (lambda () (begin (%r7rs-def-root (lit guard) %c-guard)
-                    (%r7rs-def-root (lit %c-guard) ())))
-  (lambda () (begin (%r7rs-def-root (lit %c-guard) guard)
-                    (%r7rs-def-root (lit guard) %r7rs-guard))))
+  (lambda () (begin (%r7rs-def-root (Env current) (lit guard) %c-guard)
+                    (%r7rs-def-root (Env current) (lit %c-guard) ())))
+  (lambda () (begin (%r7rs-def-root (Env current) (lit %c-guard) guard)
+                    (%r7rs-def-root (Env current) (lit guard) %r7rs-guard))))
