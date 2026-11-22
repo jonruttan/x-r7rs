@@ -5,7 +5,7 @@
 ; no longer exists, and the rest are catalog entries with a different calling
 ; convention. The platform grew Buf (lib/x/type/buf.x), a collector-aware byte
 ; buffer and the obvious substrate; rebuilding on it is a rewrite, scoped
-; alongside the port layer, and restoring either moves lang.xon's dialect to
+; alongside the port layer, and restoring either moves bundle.xon's dialect to
 ; rn. Cost: the tests in tests/specs/21-bytevectors.spec.md.
 
 ; --- Bytevectors (R7RS §6.9) ---
@@ -13,7 +13,7 @@
 
 ; The type handles this file asks convert for, fetched by name through the
 ; platform's public door.
-(module r7rs/x/bytevector)
+(module r7rs/base)
 (define %r7rs-int-type (Type named INTEGER))
 (define %r7rs-string-type (Type named STRING))
 (define %r7rs-char-type (Type named CHARACTER))

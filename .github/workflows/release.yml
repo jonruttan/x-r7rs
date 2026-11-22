@@ -1,7 +1,7 @@
 name: Release
 
 # A v* tag publishes a release: the tarball and its sha256, which a consumer's
-# lang.pin.xon verifies. The suite runs first; a red tree publishes nothing.
+# bundle.pin.xon verifies. The suite runs first; a red tree publishes nothing.
 
 on:
   push:
@@ -24,23 +24,23 @@ jobs:
 
       - name: Check out the x-lang this bundle declares
         run: |
-          declared=$(sed -n 's/^(requires-release "\(.*\)")$/\1/p' lang.xon)
-          echo "lang.xon declares $declared"
+          declared=$(sed -n 's/^(requires-release "\(.*\)")$/\1/p' bundle.xon)
+          echo "bundle.xon declares $declared"
           git clone --depth 1 --branch "$declared" \
             https://github.com/jonruttan/x-lang.git .x-lang
 
-      # The lang this bundle is built on, at the version lang.xon requires.
+      # The lang this bundle is built on, at the version bundle.xon requires.
       # Without it no spec runs -- see ci.yml for why the sibling layout the
       # harness probes for is unavailable on a runner and R5RS_ROOT is used
       # instead.
       # Cloned rather than checked out, for the same reason the x-lang step
-      # above is: the version comes FROM lang.xon.  A literal ref here would
+      # above is: the version comes FROM bundle.xon.  A literal ref here would
       # be a second copy of the fact on the one path where getting it wrong
       # publishes a bundle built against a dependency nobody declared.
       - name: Check out the lang this bundle requires
         run: |
-          declared=$(sed -n 's/^(requires-lang "r5rs" "\(.*\)")$/\1/p' lang.xon)
-          echo "lang.xon requires r5rs $declared"
+          declared=$(sed -n 's/^(requires-bundle "r5rs" "\(.*\)")$/\1/p' bundle.xon)
+          echo "bundle.xon requires r5rs $declared"
           git clone --depth 1 --branch "$declared" \
             https://github.com/jonruttan/x-r5rs.git .x-r5rs
 
@@ -75,15 +75,15 @@ jobs:
             echo '## Install'
             echo
             echo '```sh'
-            echo "x --install-lang https://github.com/jonruttan/x-r7rs/releases/download/$TAG/lang.pin.xon"
+            echo "x --install-bundle https://github.com/jonruttan/x-r7rs/releases/download/$TAG/bundle.pin.xon"
             echo '```'
             echo
             echo '## Or pin it, for a project'
             echo
-            echo 'Put this in the project'"'"'s `lang.pin.xon`:'
+            echo 'Put this in the project'"'"'s `bundle.pin.xon`:'
             echo
             echo '```x'
-            sed -n '/^  (lang /,$p' roll.out | sed 's/^  //'
+            sed -n '/^  (name /,$p' roll.out | sed 's/^  //'
             echo '```'
           } > notes.md
           gh release create "$TAG" \
@@ -91,4 +91,4 @@ jobs:
             --notes-file notes.md \
             "dist/x-r7rs-$TAG.tar.gz" \
             "dist/x-r7rs-$TAG.tar.gz.sha256" \
-            "dist/lang.pin.xon"
+            "dist/bundle.pin.xon"

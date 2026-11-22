@@ -18,10 +18,10 @@
 ; a bare C primitive survives the image -- only the name does, which the loader
 ; restores against its own base. This is float.x's transient discipline.
 (r7rs-shadow!
-  (lambda () (begin (%r7rs-def-root (lit error) %c-error)
-                    (%r7rs-def-root (lit %c-error) ())))
-  (lambda () (begin (%r7rs-def-root (lit %c-error) error)
-                    (%r7rs-def-root (lit error) %r7rs-error))))
+  (lambda () (begin (%r7rs-def-root (Env current) (lit error) %c-error)
+                    (%r7rs-def-root (Env current) (lit %c-error) ())))
+  (lambda () (begin (%r7rs-def-root (Env current) (lit %c-error) error)
+                    (%r7rs-def-root (Env current) (lit error) %r7rs-error))))
 
 (define (error-object? obj)
   (and (pair? obj) (eq? (car obj) %error-label)))

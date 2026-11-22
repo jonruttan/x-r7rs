@@ -25,12 +25,12 @@ something different by it. The terms are in x-lang's
 [lang contract](https://github.com/jonruttan/x-lang/blob/main/docs/lang-contract.md).
 
 It is the first lang built on another lang rather than straight on the
-platform — `lang.xon` declares that dependency and x refuses at startup, by
+platform — `bundle.xon` declares that dependency and x refuses at startup, by
 name, if it is missing.
 
 ## Status
 
-**615 of 642 specs green** against x-lang **v0.59.0** and x-r5rs **v0.2.5**.
+**615 of 642 specs green** against x-lang **v0.60.0** and x-r5rs **v0.3.0**.
 
 The 27 that do not pass are recorded by name in
 [`tests/contract/known-failures.txt`](tests/contract/known-failures.txt), and
@@ -52,14 +52,14 @@ whole language is loaded at once.
 Nothing cloned, from any directory:
 
 ```bash
-x --install-lang https://github.com/jonruttan/x-r5rs/releases/latest/download/lang.pin.xon
-x --install-lang https://github.com/jonruttan/x-r7rs/releases/latest/download/lang.pin.xon
+x --install-bundle https://github.com/jonruttan/x-r5rs/releases/latest/download/bundle.pin.xon
+x --install-bundle https://github.com/jonruttan/x-r7rs/releases/latest/download/bundle.pin.xon
 x -l r7rs
 ```
 
 x fetches each published pin, then the tarball it names, verifies the digest,
-and installs to `<share>/langs/`, where `x -l` looks. Install x-r5rs first:
-x-r7rs requires it at one exact version, the one `lang.xon` names, and
+and installs to `<share>/bundles/`, where `x -l` looks. Install x-r5rs first:
+x-r7rs requires it at one exact version, the one `bundle.xon` names, and
 refuses by name when it is absent or another.
 
 From a clone:
@@ -84,22 +84,22 @@ installing depends on it; `x --no-image -l r7rs` boots from source on any
 platform.
 
 `x` resolves langs relative to the directory it runs in. Inside an x-lang
-checkout it searches `deps/langs/` only, so an installed lang is not found
+checkout it searches `deps/bundles/` only, so an installed lang is not found
 there:
 
 ```
 $ cd path/to/x-lang && x -l r7rs
 Error: no library, app or lang named 'r7rs'
   searched lib/r7rs.x, apps/r7rs/run.x
-      and deps/langs/*/lang.xon
+      and deps/bundles/*/bundle.xon
 ```
 
-Run `x` from another directory, or set `X_LANG_DIR`, which takes precedence in
+Run `x` from another directory, or set `X_BUNDLE_DIR`, which takes precedence in
 both cases:
 
 ```bash
-X_LANG_DIR=$HOME/.local/share/x/langs/ x -l r7rs   # the installed one
-X_LANG_DIR=/path/to/x-r7rs/.. x -l r7rs            # a checkout, uninstalled
+X_BUNDLE_DIR=$HOME/.local/share/x/bundles/ x -l r7rs   # the installed one
+X_BUNDLE_DIR=/path/to/x-r7rs/.. x -l r7rs            # a checkout, uninstalled
 ```
 
 
@@ -107,10 +107,10 @@ X_LANG_DIR=/path/to/x-r7rs/.. x -l r7rs            # a checkout, uninstalled
 
 An install is unversioned and machine-wide. When it matters *which* version a
 project builds against, pin it — `Pin bundle` verifies the tarball against a
-digest before unpacking. In the project's `lang.pin.xon`:
+digest before unpacking. In the project's `bundle.pin.xon`:
 
 ```x
-(lang "r7rs")
+(name "r7rs")
 (release "v0.1.7")
 (bundle "sha256:…" "https://github.com/jonruttan/x-r7rs/releases/download/v0.1.7/x-r7rs-v0.1.7.tar.gz")
 (source "https://github.com/jonruttan/x-r7rs.git")
@@ -120,13 +120,13 @@ The exact block, digest filled in, is published with each release.
 
 ## The r5rs dependency
 
-`lang.xon` carries it as a row, not a probe:
+`bundle.xon` carries it as a row, not a probe:
 
 ```x
-(requires-lang "r5rs" "v0.2.5")
+(requires-bundle "r5rs" "v0.3.0")
 ```
 
-x resolves it the same way it resolves `-l`, arms r5rs's root *before* this
+x resolves it the same way it resolves `-l`, arms r5rs's `lib/` *before* this
 bundle's own so anything shared here still wins, and refuses at startup naming
 what is missing and who asked for it. The version is compared for **equality**,
 never parsed, and what it compares against is derived — `make install` and
@@ -138,17 +138,17 @@ tagged.
 that release's polymorphic port source and sink, and against v0.1.0 x-r7rs does
 not fail a spec, it fails to load.
 
-**v0.2.5 is what the row declares**, because the comparison is equality rather
+**v0.3.0 is what the row declares**, because the comparison is equality rather
 than a minimum: it answers *which x-r5rs was this built and tested against*,
-and only that version satisfies it. It is the first x-r5rs release whose files
-are scoped modules, which this bundle reads by their provided names. The floor
-has not moved, only the pairing.
+and only that version satisfies it. It is also the floor on x-lang v0.60.0: the
+first x-r5rs in the bundle shape, and the first whose `define` binds where its
+own library reads it.
 
 That is also the cost of equality matching: every x-r5rs release obsoletes this
 row, so the two move in lockstep. It is the price of *never parsed*, paid
 deliberately instead of building a resolver.
 
-Working on both at once, `--allow-lang-skew` is the way through.
+Working on both at once, `--allow-bundle-skew` is the way through.
 
 ## Running it
 
@@ -157,7 +157,7 @@ x -l r7rs                  # interactive
 x -l r7rs -f program.scm   # batch
 ```
 
-x-lang boots the dialect `lang.xon` declares, resolves and arms x-r5rs's root,
+x-lang boots the dialect `bundle.xon` declares, resolves and arms x-r5rs's `lib/`,
 then this bundle's own on top of it.
 
 ## Development
@@ -176,17 +176,17 @@ fixed.
 
 **Do not `make install` into an x-lang checkout.** The Makefile asks
 `$(X) --share-dir` where to put the bundle, and a checkout answers with its own
-root — so the files land in `<checkout>/langs/NAME`, which is not one of the
+root — so the files land in `<checkout>/bundles/NAME`, which is not one of the
 three paths `-l` searches there. It reports success and the lang stays
-invisible. Install into a real `<share>` tree, or use `X_LANG_DIR`.
+invisible. Install into a real `<share>` tree, or use `X_BUNDLE_DIR`.
 
 
 **And this bundle needs an x-r5rs it can resolve.** A checkout of x-r5rs does
 not satisfy the row — only an install or an unpacked release tarball carries
 the stamped `version` file the comparison reads. That stamp is `git describe`,
 so installing x-r5rs from a checkout that is not exactly on its tag produces
-something like `v0.2.5-1-gabc1234-dirty`, which is not `v0.2.5` and is refused
-by name. `--allow-lang-skew` is the way through while working on both at once.
+something like `v0.3.0-1-gabc1234-dirty`, which is not `v0.3.0` and is refused
+by name. `--allow-bundle-skew` is the way through while working on both at once.
 
 CI runs the declared release *and* x-lang `main`, so a platform that moves
 underneath this bundle shows up as a red build rather than a surprise later.
@@ -198,9 +198,9 @@ primitive and the flat way to write a decision with more than a couple of arms;
 a chain of `if`s nested through their else branches says the same thing one
 indent deeper per arm. Four arms is the threshold, and
 `tools/contract/if-ladders.txt` is **empty**: the 31 three-armed `if`s across
-the modules are chains of one link, bar two of two in `r7rs/x/guard.x`,
+the modules are chains of one link, bar two of two in `lib/r7rs/x/guard.x`,
 because this bundle is a thin layer over x-r5rs and the decisions with arms
-live in `r7rs/scm/*.scm` where `cond` is already flat. The check is a ratchet
+live in `lib/r7rs/scm/*.scm` where `cond` is already flat. The check is a ratchet
 in both directions — a new ladder is red, and so is a manifest row that has
 been outgrown but not lowered, so a fix cannot leave the file behind as a
 record of things that are fine. It needs no x-r5rs: the checker parses the
@@ -209,20 +209,20 @@ modules and never evaluates them.
 ## Layout
 
 ```
-lang.xon            what this bundle IS -- name, dialect, dependencies
-run.x               the entry point lang.xon names
-r7rs/base.x         the load order
-r7rs/constructs.x   construct declarations: how each form formats and scopes
-r7rs/printer.x      re-exports x-r5rs's write
-r7rs/shadow.x       the names R7RS shadows, restored around an image
-r7rs/scm/*.scm      the language, in Scheme
-r7rs/x/*.x          the parts that need x itself
-tests/specs/        the suite, as literate markdown
-tests/contract/     the recorded debt CI gates on
-tools/check/        the gates: release-refs from x-lang's lang kit, and the
-                    if-ladder linter, which is x because a ladder's depth is what a grep cannot see
-tools/contract/     the recorded if-ladder debt -- empty, and saying so
-docs/               the R7RS reports
+bundle.xon                 what this bundle IS -- name, dialect, dependencies
+lib/r7rs/run.x             the entry: the module r7rs/run
+lib/r7rs/base.x            the load order
+lib/r7rs/constructs.x      construct declarations: how each form formats and scopes
+lib/r7rs/printer.x         re-exports x-r5rs's write
+lib/r7rs/shadow.x          the names R7RS shadows, restored around an image
+lib/r7rs/scm/*.scm         the language, in Scheme
+lib/r7rs/x/*.x             the parts that need x itself
+tests/specs/               the suite, as literate markdown
+tests/contract/            the recorded debt CI gates on
+tools/check/               the gates: release-refs from x-lang's bundle kit, and the
+                           if-ladder linter, which is x because a ladder's depth is what a grep cannot see
+tools/contract/            the recorded if-ladder debt -- empty, and saying so
+docs/                      the R7RS reports
 ```
 
 ## Background
