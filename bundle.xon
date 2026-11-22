@@ -1,18 +1,19 @@
-; lang.xon -- what this bundle is.
+; bundle.xon -- what this bundle is.
 ;
 ; xon: read with the ordinary reader and never evaluated, like every manifest
 ; in the x-lang world (pin.xon, engine.pin.xon). An unknown form is a loud
 ; error, never a silent skip.
 ;
 ; FORMAT (one form per line):
-;   (lang "NAME")               the -l name
+;   (name "NAME")               the bundle, and the first part of its modules
 ;   (dialect NAME)              he | xe | rn -- a requirement
 ;   (requires-release "TAG")    the x-lang this bundle was built against
-;   (requires-lang "NAME" ["V"]) another lang this one is written on top
+;   (requires-bundle "NAME" ["V"]) another bundle this one is written on top
 ;                               of, optionally at an exact version
-;   (entry "FILE")              loaded AFTER the dialect, not instead of it
+;   (entry NAME)                a module `x -l` may start: `x -l r7rs` is
+;                               r7rs/run, imported, then its `main` called
 
-(lang "r7rs")
+(name "r7rs")
 
 ; Xenon: Scheme's numerics are the tower. Not radon, because the two modules
 ; that wanted dlopen -- x/bytevector.x and scm/ports.scm -- are not loaded in
@@ -22,26 +23,26 @@
 ; The x-lang release this bundle is built and tested against; CI compares it
 ; for equality.
 
-(requires-release "v0.59.0")
+(requires-release "v0.60.0")
 
 ; R7RS is R5RS plus about 700 lines, and this row is what says so. x.sh
-; resolves it the way it resolves -l, arms the required lang's root before this
-; bundle's own (import-path! prepends, so a shared name still resolves to ours),
-; and refuses at startup naming what is missing and who asked.
+; resolves it the way it resolves -l, arms the required bundle's lib/ before
+; this bundle's own (import-path! prepends, so a shared name still resolves to
+; ours), and refuses at startup naming what is missing and who asked.
 ;
 ; The version is compared for equality, never parsed -- the same rule as
 ; (requires-release ...) above -- so it names what this was built and tested
 ; against, not a minimum, and every x-r5rs release obsoletes the row.
-; --allow-lang-skew is the way through while working on both at once.
+; --allow-bundle-skew is the way through while working on both at once.
 ;
 ; What the version compares against is derived: `make install` and
 ; tools/bundle.sh stamp a `version` file from git describe, so a checkout
 ; (which carries no stamp) does not satisfy the row -- only an install or an
 ; unpacked release tarball does.
 ;
-; v0.2.0 is a floor this bundle cannot run below: the string ports are built on
-; that release's polymorphic %strsrc/%strsink, which v0.1.0 lacks. Against
-; v0.1.0 this bundle fails to load, not a spec.
-(requires-lang "r5rs" "v0.2.5")
+; v0.3.0 is a floor this bundle cannot run below on x-lang v0.60.0: it is the
+; first x-r5rs in this shape, and the first whose `define` binds where the
+; library reads it.
+(requires-bundle "r5rs" "v0.3.0")
 
-(entry "run.x")
+(entry run)

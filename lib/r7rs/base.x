@@ -6,13 +6,13 @@
 ; @copyright 2026 Jon Ruttan
 ; @license MIT No Attribution (MIT-0)
 ;
-; R7RS is R5RS plus, and this file is only the plus. run.x arms the x-r5rs
-; bundle's root and imports r5rs/base before this loads, so everything under
-; ./scm/ can be written as if the R5RS library were the standard library --
-; which, for R7RS, it is. The dependency is declared by (requires-lang "r5rs")
-; in lang.xon.
+; R7RS is R5RS plus, and this file is only the plus. The wrapper arms the
+; x-r5rs bundle's lib/, and r7rs/run imports r5rs/base before this loads, so
+; everything under ./scm/ can be written as if the R5RS library were the
+; standard library -- which, for R7RS, it is. The dependency is declared by
+; (requires-bundle "r5rs") in bundle.xon.
 ;
-; No path literals and no dialect boot here: run.x owns both. Siblings are
+; No path literals and no dialect boot here: the wrapper owns both. Siblings are
 ; reached by ./-relative include-once, which resolves against this file.
 
 (module r7rs/base)

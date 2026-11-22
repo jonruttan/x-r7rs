@@ -1,12 +1,12 @@
 # x-r7rs -- the R7RS lang for x-lang
 #
-# Install copies this bundle to <share>/langs/r7rs, where `x -l` looks: a lang
+# Install copies this bundle to <share>/bundles/r7rs, where `x -l` looks: a lang
 # is installed when its files are there. No registry, no database.
 #
 #   make install                        into the x on PATH
 #   PREFIX=$HOME/.local make install    into a particular prefix
 #
-# A pin (lang.pin.xon + Pin bundle) freezes a verified tarball for one project
+# A pin (bundle.pin.xon + Pin bundle) freezes a verified tarball for one project
 # and is what a build should depend on. An install is one unversioned copy for
 # the whole machine. Pin when the version matters; install to get `x -l r7rs`
 # working.
@@ -15,7 +15,7 @@ X ?= x
 
 # The version is derived from git describe, never committed: a version literal
 # is true only at the commit it is tagged on and wrong on every commit after.
-# lang.xon declares what this bundle requires; the installed artifact carries
+# bundle.xon declares what this bundle requires; the installed artifact carries
 # what it is, in a version stamp -- the same split as x-lang's own
 # $(X_RELEASE) -> <lib>/contract/release.
 LANG_VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo dev)
@@ -23,14 +23,14 @@ LANG_VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo
 # install`.  Otherwise ask the x on PATH where its tree is -- the question
 # --share-dir exists to answer.
 SHARE := $(if $(PREFIX),$(PREFIX)/share/x,$(shell $(X) --share-dir))
-DEST  := $(SHARE)/langs/r7rs
+DEST  := $(SHARE)/bundles/r7rs
 
 # What a consumer needs to run the lang: the declaration, the entry, the
 # modules. Not the suite, the tooling, or CI.
-PAYLOAD := lang.xon run.x r7rs
+PAYLOAD := bundle.xon lib
 
 .PHONY: install
-install: ## Install into <share>/langs/r7rs
+install: ## Install into <share>/bundles/r7rs
 	@test -n "$(SHARE)" || { echo "x-r7rs: cannot find an x tree -- set PREFIX or X" >&2; exit 1; }
 	@test -d "$(SHARE)" || { echo "x-r7rs: no x tree at $(SHARE)" >&2; exit 1; }
 	rm -rf "$(DEST)"
@@ -55,7 +55,7 @@ test: ## Run the spec suite (every failure is loud)
 check: check-release-refs check-if-ladders ## Run the suite against tests/contract/known-failures.txt -- what CI gates on
 	X="$(X)" sh tests/spec-gate.sh
 
-# Seconds, and no platform needed: it reads lang.xon and greps the tree.  It
+# Seconds, and no platform needed: it reads bundle.xon and greps the tree.  It
 # rides `check` instead of standing on its own because what it catches -- a
 # README naming a pairing nobody tested -- ships silently otherwise.
 .PHONY: check-release-refs

@@ -50,7 +50,7 @@ command -v "$X" >/dev/null 2>&1 || {
 	exit 1
 }
 
-MODULES="$BUNDLE/r7rs"
+MODULES="$BUNDLE/lib/r7rs"
 MANIFEST="$BUNDLE/tools/contract/if-ladders.txt"
 TMP="${TMPDIR:-/tmp}/if-ladders.$$"
 trap 'rm -f "$TMP.files" "$TMP.raw" "$TMP.want" "$TMP.have"' EXIT
