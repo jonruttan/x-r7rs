@@ -14,7 +14,7 @@
 ; guarded body. `define` binds in the root whatever the frame depth (engine
 ; law 10), so a `define` inside the guarded body still binds.
 
-(module r7rs/x/guard)
+(module r7rs/base)
 (import r7rs/shadow r7rs-shadow!)
 (define %c-guard guard)
 

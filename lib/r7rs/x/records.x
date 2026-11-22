@@ -11,7 +11,7 @@
 
 ; The string type's handle, fetched by name through the platform's public
 ; door.
-(module r7rs/x/records)
+(module r7rs/base)
 (define %r7rs-string-type (Type named STRING))
 
 (define
