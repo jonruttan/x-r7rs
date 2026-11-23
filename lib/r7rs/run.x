@@ -20,7 +20,6 @@
 ; follows on the stream -- a program, or the launcher's session -- is read
 ; with Scheme's names in place.
 (module r7rs/run)
-(import r5rs/base)
 (import r7rs/base r7rs-version r7rs-repl-print)
 
 (set! %lang-name "R7RS Scheme")

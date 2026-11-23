@@ -104,7 +104,6 @@ cat > "$OUT" <<EOF
 (def %install-root "$X_ROOT")
 (include "$X_BASE")
 $DEP_FORMS(import-path! "$BUNDLE/lib")
-(import r5rs/base)
 (import r7rs/base r7rs-repl-print)
 (set! %repl-print r7rs-repl-print)
 EOF

@@ -7,7 +7,7 @@
 ; @license MIT No Attribution (MIT-0)
 ;
 ; R7RS is R5RS plus, and this file is only the plus. The wrapper arms the
-; x-r5rs bundle's lib/, and r7rs/run imports r5rs/base before this loads, so
+; x-r5rs bundle's lib/, and this module imports r5rs/base first, so
 ; everything under ./scm/ can be written as if the R5RS library were the
 ; standard library -- which, for R7RS, it is. The dependency is declared by
 ; (requires-bundle "r5rs") in bundle.xon.
@@ -16,6 +16,7 @@
 ; reached by ./-relative include-once, which resolves against this file.
 
 (module r7rs/base)
+(import r5rs/base)
 (import r7rs/printer)
 (import r5rs/printer r5rs-repl-print)
 (import r7rs/shadow r7rs-shadows-down! r7rs-shadows-up!)
