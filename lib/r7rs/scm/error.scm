@@ -31,3 +31,10 @@
 
 (define (error-object-irritants obj)
   (if (error-object? obj) (caddr obj) ()))
+
+; --- raise (R7RS 6.11) ---
+; The platform's `error` raises whatever it is given, and `guard` binds that
+; object; `error` above hands it an error object. `raise` hands it OBJ as it
+; is, so a guard clause tests the object that was raised.
+(define (raise obj)
+  (%c-error obj))
