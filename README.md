@@ -168,7 +168,11 @@ X=/path/to/x-lang/x.sh make check   # the suite against known-failures.txt -- wh
 make check-release-refs             # the declared versions are named in one place
 X=/path/to/x-lang/x.sh make check-if-ladders   # no new nested-if ladders
 make bundle                         # roll a release tarball and print its pin
+make card                           # docs/card.md: its format, and every program run
 ```
+
+[docs/card.md](docs/card.md) is the reference page: what R7RS adds to R5RS,
+in tables and programs that are run, each line beside what it prints.
 
 **Pass `X` explicitly.** Without it the suite takes the `x` on your PATH, and an
 installed x that trails the checkout reports failures the platform has already
