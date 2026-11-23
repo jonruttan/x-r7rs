@@ -146,3 +146,53 @@
 ```
 ---
     42
+
+## raise
+
+### raise hands guard the object as it is
+
+```scheme
+(guard (e (#t e)) (raise 21))
+```
+---
+    21
+
+### a guard clause tests the raised object
+
+```scheme
+(guard (e ((number? e) (* e 2))) (raise 21))
+```
+---
+    42
+
+### a raised symbol
+
+```scheme
+(guard (e ((symbol? e) (list (quote sym) e))) (raise (quote oops)))
+```
+---
+    (sym oops)
+
+### a raised string is not an error object
+
+```scheme
+(guard (e ((error-object? e) (quote err)) ((string? e) (string-append "s:" e))) (raise "oops"))
+```
+---
+    "s:oops"
+
+### a raised list
+
+```scheme
+(guard (e ((pair? e) (car e))) (raise (list 1 2)))
+```
+---
+    1
+
+### the clause after one that fails
+
+```scheme
+(guard (e ((string? e) (quote str)) ((number? e) (quote num))) (raise 7))
+```
+---
+    num
